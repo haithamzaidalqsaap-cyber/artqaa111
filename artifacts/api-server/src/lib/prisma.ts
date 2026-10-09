@@ -3,7 +3,10 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { collections } from "./firebase";
 
-const STORE_PATH = resolve(process.cwd(), "data/store.json");
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const STORE_PATH = isServerless
+  ? resolve("/tmp", "store.json")
+  : resolve(process.cwd(), "data/store.json");
 
 // Persistent local + Firestore data store
 class DataStore {
@@ -131,12 +134,17 @@ class DataStore {
 
   loadFromLocalFile() {
     try {
-      if (existsSync(STORE_PATH)) {
-        const raw = readFileSync(STORE_PATH, "utf-8");
-        const data = JSON.parse(raw);
-        if (data.members) {
-          for (const [k, v] of Object.entries(data.members)) {
-            const m: any = { ...(v as any) };
+      const candidates = [
+        STORE_PATH,
+        resolve(process.cwd(), "data/store.json"),
+      ];
+      for (const filePath of candidates) {
+        if (existsSync(filePath)) {
+          const raw = readFileSync(filePath, "utf-8");
+          const data = JSON.parse(raw);
+          if (data.members) {
+            for (const [k, v] of Object.entries(data.members)) {
+              const m: any = { ...(v as any) };
             const digits = String(m.phone || "").replace(/[^0-9]/g, "");
             if (digits.length >= 5) {
               m.memberId = digits.slice(-5);
@@ -153,9 +161,11 @@ class DataStore {
         if (data.settings) for (const [k, v] of Object.entries(data.settings)) this.settings.set(k, v);
         if (data.taskDefinitions) for (const [k, v] of Object.entries(data.taskDefinitions)) this.taskDefinitions.set(k, v);
         if (data.taskAssignments) for (const [k, v] of Object.entries(data.taskAssignments)) this.taskAssignments.set(k, v);
+        break;
       }
-    } catch {}
-  }
+    }
+  } catch {}
+}
 
   scheduleSave() {
     if (this.saveTimeout) return;
