@@ -1,0 +1,773 @@
+{
+  "members": {
+    "d95c1545-135f-4854-b87c-fe94a09204ec": {
+      "name": "المدير العام",
+      "phone": "07519952000",
+      "passwordHash": "6088ae2a391027dddcf738925350c68c:3d0d1de9ed0e6bb0d3c8427382c416fd1e2b7a626aac07370d29c72cf48df7f9f418290a60b81074f3a8ed15392cd4dbcf7e6e24d69bebb0e7ede6060ceb1a27",
+      "memberId": "52000",
+      "referralCode": "admin1",
+      "role": "admin",
+      "honorPoints": 105,
+      "balanceCents": 0,
+      "earnedCents": 0,
+      "realBalanceCents": 200,
+      "realEarnedCents": 1125,
+      "payoutAddress": "0x8141e17cf494307bc7a86dd75077fd1ec40b8f5a",
+      "active": true,
+      "createdAt": "2026-10-05T23:11:36.200Z",
+      "id": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "startsAt": "2026-10-05T23:11:36.201Z"
+    },
+    "c10cd395-2a9b-4826-858a-5d9f640678ef": {
+      "name": "تجربة",
+      "phone": "07712345678",
+      "passwordHash": "009c9098262285cdeb2a574c2e9924e5:0213cc69ef643a84a591de2d4de2371c257dfed82de0907608bffc65062a1a81ee09b835c5f85408b10d08ce4735de8b7aa599f11e011255d7aa050583a896c9",
+      "memberId": "45678",
+      "referralCode": "1e24ad",
+      "inviterId": null,
+      "role": "member",
+      "honorPoints": 0,
+      "balanceCents": 0,
+      "earnedCents": 0,
+      "realBalanceCents": 0,
+      "realEarnedCents": 0,
+      "payoutAddress": null,
+      "active": true,
+      "createdAt": "2026-10-06T01:41:21.757Z",
+      "id": "c10cd395-2a9b-4826-858a-5d9f640678ef",
+      "startsAt": "2026-10-06T01:41:21.757Z"
+    },
+    "22210d16-7267-4bb2-8962-4861e4a8ca64": {
+      "name": "للو",
+      "phone": "0771122334",
+      "passwordHash": "e709a4baba688b0421839d4b6d0e878c:c3399e685abe68c20a9395b47726d25a12dfef68a65cca1fc6ef25c00c17a98857fffc51a953dcce2a8aa689427c722627d7bf16568b4019f7ab47cc6242e9ce",
+      "memberId": "22334",
+      "referralCode": "bc32dd",
+      "inviterId": "c10cd395-2a9b-4826-858a-5d9f640678ef",
+      "role": "member",
+      "honorPoints": 5,
+      "balanceCents": 0,
+      "earnedCents": 0,
+      "realBalanceCents": 0,
+      "realEarnedCents": 0,
+      "payoutAddress": null,
+      "active": true,
+      "createdAt": "2026-10-06T01:52:56.258Z",
+      "id": "22210d16-7267-4bb2-8962-4861e4a8ca64",
+      "startsAt": "2026-10-06T01:52:56.258Z"
+    }
+  },
+  "sessions": {
+    "405fbb60a2b122d09053a11b34f6675bef1764d1fb097bdeea82c482e43cf5b3": {
+      "tokenHash": "405fbb60a2b122d09053a11b34f6675bef1764d1fb097bdeea82c482e43cf5b3",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-10-12T23:11:36.367Z",
+      "id": "405fbb60a2b122d09053a11b34f6675bef1764d1fb097bdeea82c482e43cf5b3",
+      "createdAt": "2026-10-05T23:11:36.367Z",
+      "startsAt": "2026-10-05T23:11:36.367Z"
+    },
+    "51c6c060669839cc3945af0d5f855f4a28afed0d5f72fdc69660236a422aedc4": {
+      "tokenHash": "51c6c060669839cc3945af0d5f855f4a28afed0d5f72fdc69660236a422aedc4",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-10-12T23:23:34.602Z",
+      "id": "51c6c060669839cc3945af0d5f855f4a28afed0d5f72fdc69660236a422aedc4",
+      "createdAt": "2026-10-05T23:23:34.602Z",
+      "startsAt": "2026-10-05T23:23:34.602Z"
+    },
+    "cb5dc55be7151c82900b1047917cd486c68d4681cb499937d89dd7583846614e": {
+      "tokenHash": "cb5dc55be7151c82900b1047917cd486c68d4681cb499937d89dd7583846614e",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-10-12T23:54:06.387Z",
+      "id": "cb5dc55be7151c82900b1047917cd486c68d4681cb499937d89dd7583846614e",
+      "createdAt": "2026-10-05T23:54:06.387Z",
+      "startsAt": "2026-10-05T23:54:06.387Z"
+    },
+    "10d37f4989fc6e45ab7d4caa3e5f1f5ccb5c8e5334efe068e83a0b2480a61f5c": {
+      "tokenHash": "10d37f4989fc6e45ab7d4caa3e5f1f5ccb5c8e5334efe068e83a0b2480a61f5c",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-10-12T23:54:47.010Z",
+      "id": "10d37f4989fc6e45ab7d4caa3e5f1f5ccb5c8e5334efe068e83a0b2480a61f5c",
+      "createdAt": "2026-10-05T23:54:47.010Z",
+      "startsAt": "2026-10-05T23:54:47.010Z"
+    },
+    "43ba8980d86e255d95893138d05e21eed052914cb95d04f4b93a563895d21674": {
+      "tokenHash": "43ba8980d86e255d95893138d05e21eed052914cb95d04f4b93a563895d21674",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-10-13T00:28:21.329Z",
+      "id": "43ba8980d86e255d95893138d05e21eed052914cb95d04f4b93a563895d21674",
+      "createdAt": "2026-10-06T00:28:21.329Z",
+      "startsAt": "2026-10-06T00:28:21.329Z"
+    },
+    "6095da97257bc722c6b7b1ff6fb94f04187de461dc099f912ec0461cfdfc3dad": {
+      "tokenHash": "6095da97257bc722c6b7b1ff6fb94f04187de461dc099f912ec0461cfdfc3dad",
+      "memberId": "22210d16-7267-4bb2-8962-4861e4a8ca64",
+      "expiresAt": "2026-11-05T01:52:56.363Z",
+      "id": "6095da97257bc722c6b7b1ff6fb94f04187de461dc099f912ec0461cfdfc3dad",
+      "createdAt": "2026-10-06T01:52:56.363Z",
+      "startsAt": "2026-10-06T01:52:56.363Z"
+    },
+    "4b9af3bb8a64d123297aae3f6ef952b6c622bbd604557e6d6060f627ad32cc6c": {
+      "tokenHash": "4b9af3bb8a64d123297aae3f6ef952b6c622bbd604557e6d6060f627ad32cc6c",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-11-08T01:13:52.830Z",
+      "id": "4b9af3bb8a64d123297aae3f6ef952b6c622bbd604557e6d6060f627ad32cc6c",
+      "createdAt": "2026-10-09T01:13:52.830Z",
+      "startsAt": "2026-10-09T01:13:52.830Z"
+    },
+    "f7bdcda73eef97f5785bb71327a0b162d8103b3129ee2583db8e83c7f97c92db": {
+      "tokenHash": "f7bdcda73eef97f5785bb71327a0b162d8103b3129ee2583db8e83c7f97c92db",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-11-08T01:34:17.476Z",
+      "id": "f7bdcda73eef97f5785bb71327a0b162d8103b3129ee2583db8e83c7f97c92db",
+      "createdAt": "2026-10-09T01:34:17.477Z",
+      "startsAt": "2026-10-09T01:34:17.477Z"
+    },
+    "6a23a3afd2588bac21e549bc91b6db61b332807794c006eef97bb145c7728919": {
+      "tokenHash": "6a23a3afd2588bac21e549bc91b6db61b332807794c006eef97bb145c7728919",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-11-08T01:52:10.935Z",
+      "id": "6a23a3afd2588bac21e549bc91b6db61b332807794c006eef97bb145c7728919",
+      "createdAt": "2026-10-09T01:52:10.935Z",
+      "startsAt": "2026-10-09T01:52:10.935Z"
+    },
+    "de105c5dad7f3808eb624878e5f4ea4b92f4dbfb117f0a90dc8dc885586020cf": {
+      "tokenHash": "de105c5dad7f3808eb624878e5f4ea4b92f4dbfb117f0a90dc8dc885586020cf",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-11-08T02:13:28.390Z",
+      "id": "de105c5dad7f3808eb624878e5f4ea4b92f4dbfb117f0a90dc8dc885586020cf",
+      "createdAt": "2026-10-09T02:13:28.390Z",
+      "startsAt": "2026-10-09T02:13:28.390Z"
+    },
+    "0d610df6c8cb823f05dba3a7f88bb43658130d08790ed3114b477eb5127f92e9": {
+      "tokenHash": "0d610df6c8cb823f05dba3a7f88bb43658130d08790ed3114b477eb5127f92e9",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-11-08T02:21:54.445Z",
+      "id": "0d610df6c8cb823f05dba3a7f88bb43658130d08790ed3114b477eb5127f92e9",
+      "createdAt": "2026-10-09T02:21:54.445Z",
+      "startsAt": "2026-10-09T02:21:54.445Z"
+    },
+    "27fbb6d102d10a1207fc08216940b539f3aec2f43fde9b1d11eed4b0e1db4c02": {
+      "tokenHash": "27fbb6d102d10a1207fc08216940b539f3aec2f43fde9b1d11eed4b0e1db4c02",
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "expiresAt": "2026-11-08T02:22:12.194Z",
+      "id": "27fbb6d102d10a1207fc08216940b539f3aec2f43fde9b1d11eed4b0e1db4c02",
+      "createdAt": "2026-10-09T02:22:12.194Z",
+      "startsAt": "2026-10-09T02:22:12.194Z"
+    }
+  },
+  "plans": {
+    "starter": {
+      "id": "starter",
+      "name": "الباقة المجانية",
+      "description": "باقة مجانية للأعضاء الجدد بربح يومي 0.50 USDT (توثيق الحساب 4 USDT).",
+      "annualPriceCents": 0,
+      "dailyProfitCents": 50,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "configured": true,
+      "active": true
+    },
+    "bronze": {
+      "id": "bronze",
+      "name": "الباقة البرونزية (25 USDT)",
+      "description": "عضوية سنوية بقيمة 25 USDT مع ربح يومي ثابت قدره 1.00 USDT.",
+      "annualPriceCents": 2500,
+      "dailyProfitCents": 100,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "configured": true,
+      "active": true
+    },
+    "silver": {
+      "id": "silver",
+      "name": "الباقة الفضية (50 USDT)",
+      "description": "عضوية سنوية بقيمة 50 USDT مع ربح يومي ثابت قدره 2.00 USDT.",
+      "annualPriceCents": 5000,
+      "dailyProfitCents": 200,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "configured": true,
+      "active": true
+    },
+    "gold": {
+      "id": "gold",
+      "name": "الباقة الذهبية (100 USDT)",
+      "description": "عضوية سنوية بقيمة 100 USDT مع ربح يومي ثابت قدره 4.00 USDT.",
+      "annualPriceCents": 10000,
+      "dailyProfitCents": 400,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "configured": true,
+      "active": true
+    },
+    "diamond": {
+      "id": "diamond",
+      "name": "الباقة الماسية (250 USDT)",
+      "description": "عضوية سنوية بقيمة 250 USDT مع ربح يومي ثابت قدره 9.00 USDT.",
+      "annualPriceCents": 25000,
+      "dailyProfitCents": 900,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "configured": true,
+      "active": true
+    },
+    "vip": {
+      "id": "vip",
+      "name": "باقة كبار الشخصيات VIP (500 USDT)",
+      "description": "عضوية سنوية بقيمة 500 USDT مع ربح يومي ثابت قدره 18.00 USDT.",
+      "annualPriceCents": 50000,
+      "dailyProfitCents": 1800,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "configured": true,
+      "active": true
+    },
+    "elite": {
+      "id": "elite",
+      "name": "باقة النخبة Elite (1000 USDT)",
+      "description": "أعلى مستويات العضوية السنوية بقيمة 1000 USDT مع ربح يومي ثابت قدره 36.00 USDT.",
+      "annualPriceCents": 100000,
+      "dailyProfitCents": 3600,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "configured": true,
+      "active": true
+    }
+  },
+  "subscriptions": {
+    "c52471e2-7a03-49dd-91a5-05c5604a8f9f": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "starter",
+      "planName": "الباقة المجانية",
+      "planDescription": "باقة تجريبية للأعضاء الجدد لمدة 180 يوم مع توثيق أولي 4 USDT.",
+      "annualPriceCents": 0,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "dailyProfitCents": 25,
+      "startsAt": "2026-10-06T00:54:13.050Z",
+      "expiresAt": "2026-10-06T01:30:40.634Z",
+      "lastCreditedDay": 0,
+      "mode": "live",
+      "id": "c52471e2-7a03-49dd-91a5-05c5604a8f9f",
+      "createdAt": "2026-10-06T00:54:13.050Z"
+    },
+    "b8f7528c-d747-4d41-823f-505886ee6c95": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "bronze",
+      "planName": "الباقة البرونزية",
+      "planDescription": "عضوية سنوية 365 يوم مع عائد يومي ثابت قدره 1.50 USDT.",
+      "annualPriceCents": 5000,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "dailyProfitCents": 150,
+      "startsAt": "2026-10-06T01:14:35.345Z",
+      "expiresAt": "2026-10-06T01:30:40.634Z",
+      "lastCreditedDay": 0,
+      "mode": "live",
+      "id": "b8f7528c-d747-4d41-823f-505886ee6c95",
+      "createdAt": "2026-10-06T01:14:35.439Z"
+    },
+    "f95ed32d-d75d-43c9-80dd-39cb9d37ad68": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "silver",
+      "planName": "الباقة الفضية (50 USDT)",
+      "planDescription": "عضوية سنوية بقيمة 50 USDT مع ربح يومي ثابت قدره 2.00 USDT.",
+      "annualPriceCents": 5000,
+      "dailyTasks": 0,
+      "taskRewardCents": 0,
+      "dailyProfitCents": 200,
+      "startsAt": "2026-10-06T01:30:40.634Z",
+      "expiresAt": "2027-10-06T01:30:40.634Z",
+      "lastCreditedDay": 3,
+      "mode": "live",
+      "id": "f95ed32d-d75d-43c9-80dd-39cb9d37ad68",
+      "createdAt": "2026-10-06T01:30:40.788Z"
+    }
+  },
+  "deposits": {
+    "adae85c6-ecba-4d4a-bc16-f57e2505f487": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "starter",
+      "planName": "الباقة المجانية",
+      "planDescription": "باقة تجريبية للأعضاء الجدد لمدة 180 يوم مع توثيق أولي 4 USDT.",
+      "amountCents": 400,
+      "dailyProfitCents": 25,
+      "channel": "okx",
+      "address": "0x39a164b38d3566144e59103e3a537f71B8497F87",
+      "terms": "تخضع العضوية للمراجعة اليدوية والاعتماد الرسمي قبل تفعيل الأرباح اليومية.",
+      "fundingDescription": "إيداع USDT على شبكة Polygon للاشتراك في عضوية ارتقاء ذات العائد اليومي الثابت.",
+      "id": "adae85c6-ecba-4d4a-bc16-f57e2505f487",
+      "createdAt": "2026-10-06T00:45:46.692Z",
+      "startsAt": "2026-10-06T00:45:46.692Z",
+      "status": "approved",
+      "reviewNote": "",
+      "reviewedAt": "2026-10-06T00:54:13.392Z",
+      "reviewerId": "d95c1545-135f-4854-b87c-fe94a09204ec"
+    },
+    "734826dd-8c6a-40f2-8043-7ac9930045cd": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "bronze",
+      "planName": "الباقة البرونزية",
+      "planDescription": "عضوية سنوية 365 يوم مع عائد يومي ثابت قدره 1.50 USDT.",
+      "amountCents": 5000,
+      "dailyProfitCents": 150,
+      "channel": "okx",
+      "address": "0x39a164b38d3566144e59103e3a537f71B8497F87",
+      "terms": "تخضع العضوية للمراجعة اليدوية والاعتماد الرسمي قبل تفعيل الأرباح اليومية.",
+      "fundingDescription": "إيداع USDT على شبكة Polygon للاشتراك في عضوية ارتقاء ذات العائد اليومي الثابت.",
+      "id": "734826dd-8c6a-40f2-8043-7ac9930045cd",
+      "createdAt": "2026-10-06T01:12:14.668Z",
+      "startsAt": "2026-10-06T01:12:14.668Z",
+      "status": "approved",
+      "reviewNote": "",
+      "reviewedAt": "2026-10-06T01:14:35.713Z",
+      "reviewerId": "d95c1545-135f-4854-b87c-fe94a09204ec"
+    },
+    "af09b6c0-66f9-4c8c-9b1a-94ea5c3ef73c": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "gold",
+      "planName": "الباقة الذهبية",
+      "planDescription": "عضوية سنوية 365 يوم مع عائد يومي ثابت قدره 8.00 USDT.",
+      "amountCents": 23000,
+      "dailyProfitCents": 800,
+      "channel": "okx",
+      "address": "0x39a164b38d3566144e59103e3a537f71B8497F87",
+      "terms": "تخضع العضوية للمراجعة اليدوية والاعتماد الرسمي قبل تفعيل الأرباح اليومية.",
+      "fundingDescription": "إيداع USDT على شبكة Polygon للاشتراك في عضوية ارتقاء ذات العائد اليومي الثابت.",
+      "id": "af09b6c0-66f9-4c8c-9b1a-94ea5c3ef73c",
+      "createdAt": "2026-10-06T01:19:09.795Z",
+      "startsAt": "2026-10-06T01:19:09.795Z",
+      "status": "cancelled"
+    },
+    "162b6c4f-7e78-451b-8eb1-5d3521e34063": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "silver",
+      "planName": "الباقة الفضية",
+      "planDescription": "عضوية سنوية 365 يوم مع عائد يومي ثابت قدره 3.50 USDT.",
+      "amountCents": 7000,
+      "dailyProfitCents": 350,
+      "channel": "okx",
+      "address": "0x39a164b38d3566144e59103e3a537f71B8497F87",
+      "terms": "تخضع العضوية للمراجعة اليدوية والاعتماد الرسمي قبل تفعيل الأرباح اليومية.",
+      "fundingDescription": "إيداع USDT على شبكة Polygon للاشتراك في عضوية ارتقاء ذات العائد اليومي الثابت.",
+      "id": "162b6c4f-7e78-451b-8eb1-5d3521e34063",
+      "createdAt": "2026-10-06T01:29:49.770Z",
+      "startsAt": "2026-10-06T01:29:49.770Z",
+      "status": "approved",
+      "reviewNote": "",
+      "reviewedAt": "2026-10-06T01:30:41.060Z",
+      "reviewerId": "d95c1545-135f-4854-b87c-fe94a09204ec"
+    },
+    "681a7f1c-4db8-42d4-a872-c6ebc5a5e897": {
+      "memberId": "c10cd395-2a9b-4826-858a-5d9f640678ef",
+      "planId": "starter",
+      "planName": "الباقة المجانية",
+      "planDescription": "باقة تجريبية للأعضاء الجدد لمدة 180 يوم مع توثيق أولي 4 USDT.",
+      "amountCents": 400,
+      "dailyProfitCents": 50,
+      "channel": "binance",
+      "address": "0x71C83e2840004185fe0D5FE87756f7C99F94a1d4",
+      "terms": "تخضع العضوية للمراجعة اليدوية والاعتماد الرسمي قبل تفعيل الأرباح اليومية.",
+      "fundingDescription": "إيداع USDT على شبكة Polygon للاشتراك في عضوية ارتقاء ذات العائد اليومي الثابت.",
+      "id": "681a7f1c-4db8-42d4-a872-c6ebc5a5e897",
+      "createdAt": "2026-10-06T01:41:58.207Z",
+      "startsAt": "2026-10-06T01:41:58.207Z",
+      "status": "cancelled"
+    },
+    "472f3db8-ecb0-4bb1-958b-c2740c0a8cc3": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "planId": "gold",
+      "planName": "الباقة الذهبية (100 USDT)",
+      "planDescription": "عضوية سنوية بقيمة 100 USDT مع ربح يومي ثابت قدره 4.00 USDT.",
+      "amountCents": 5000,
+      "dailyProfitCents": 400,
+      "channel": "binance",
+      "address": "0x71C83e2840004185fe0D5FE87756f7C99F94a1d4",
+      "terms": "تخضع العضوية للمراجعة اليدوية والاعتماد الرسمي قبل تفعيل الأرباح اليومية.",
+      "fundingDescription": "إيداع USDT على شبكة Polygon للاشتراك في عضوية ارتقاء ذات العائد اليومي الثابت.",
+      "id": "472f3db8-ecb0-4bb1-958b-c2740c0a8cc3",
+      "createdAt": "2026-10-06T22:45:00.909Z",
+      "startsAt": "2026-10-06T22:45:00.909Z",
+      "status": "cancelled"
+    }
+  },
+  "withdrawals": {
+    "70351968-d7fe-43ad-829f-9ce895a88321": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "amountCents": 500,
+      "address": "0x8141e17cf494307bc7a86dd75077fd1ec40b8f5a",
+      "status": "rejected",
+      "mode": "live",
+      "id": "70351968-d7fe-43ad-829f-9ce895a88321",
+      "createdAt": "2026-10-06T01:31:07.427Z",
+      "startsAt": "2026-10-06T01:31:07.427Z",
+      "reviewerId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "reviewedAt": "2026-10-06T01:31:27.630Z",
+      "reviewNote": "لاحقا"
+    },
+    "0fce8843-c88f-4d7a-ac09-54e55f197291": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "amountCents": 200,
+      "address": "0x8141e17cf494307bc7a86dd75077fd1ec40b8f5a",
+      "status": "rejected",
+      "mode": "live",
+      "id": "0fce8843-c88f-4d7a-ac09-54e55f197291",
+      "createdAt": "2026-10-06T01:32:07.434Z",
+      "startsAt": "2026-10-06T01:32:07.434Z",
+      "reviewerId": "c10cd395-2a9b-4826-858a-5d9f640678ef",
+      "reviewedAt": "2026-10-06T01:51:23.426Z",
+      "reviewNote": "لاحاقا"
+    },
+    "65bd4ed3-1d96-4373-ae09-a1f247d0f9a5": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "amountCents": 500,
+      "address": "0x8141e17cf494307bc7a86dd75077fd1ec40b8f5a",
+      "status": "rejected",
+      "mode": "live",
+      "id": "65bd4ed3-1d96-4373-ae09-a1f247d0f9a5",
+      "createdAt": "2026-10-06T21:52:14.206Z",
+      "startsAt": "2026-10-06T21:52:14.206Z",
+      "reviewerId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "reviewedAt": "2026-10-06T21:52:40.016Z",
+      "reviewNote": "ظرظب"
+    },
+    "478210db-8234-48e8-a4be-6ee626e823d2": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "amountCents": 500,
+      "address": "0x8141e17cf494307bc7a86dd75077fd1ec40b8f5a",
+      "status": "rejected",
+      "mode": "live",
+      "id": "478210db-8234-48e8-a4be-6ee626e823d2",
+      "createdAt": "2026-10-06T21:52:49.820Z",
+      "startsAt": "2026-10-06T21:52:49.820Z",
+      "reviewerId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "reviewedAt": "2026-10-06T22:05:04.416Z",
+      "reviewNote": "مبمبمب"
+    },
+    "210e062c-0c74-4370-8fe8-9a98acfb96d4": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "amountCents": 500,
+      "address": "0x8141e17cf494307bc7a86dd75077fd1ec40b8f5a",
+      "status": "cancelled",
+      "mode": "live",
+      "id": "210e062c-0c74-4370-8fe8-9a98acfb96d4",
+      "createdAt": "2026-10-06T22:05:13.281Z",
+      "startsAt": "2026-10-06T22:05:13.281Z"
+    },
+    "99d047c5-181b-42e4-9eae-c9ef9b503b99": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "amountCents": 925,
+      "address": "0x8141e17cf494307bc7a86dd75077fd1ec40b8f5a",
+      "status": "paid",
+      "mode": "live",
+      "id": "99d047c5-181b-42e4-9eae-c9ef9b503b99",
+      "createdAt": "2026-10-09T01:21:59.255Z",
+      "startsAt": "2026-10-09T01:21:59.255Z",
+      "reviewerId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "reviewedAt": "2026-10-09T01:26:32.943Z",
+      "reviewNote": "",
+      "txHash": "0xdbf94fa587dad8c5177b68aba8ad1b06a241d4a2d06a060c658811b71220dd3f"
+    }
+  },
+  "activities": {
+    "42eaf94d-1fdc-4205-9dd2-635b0b54760c": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "subscription",
+      "title": "تم اعتماد الإيداع وتفعيل باقة الباقة المجانية لمدة 180 يوماً",
+      "id": "42eaf94d-1fdc-4205-9dd2-635b0b54760c",
+      "createdAt": "2026-10-06T00:54:13.350Z",
+      "startsAt": "2026-10-06T00:54:13.350Z"
+    },
+    "9b22acf0-c85a-4825-9e3d-94de47bb058f": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تعديل نقاط الشرف إلى 100: مشنرك",
+      "id": "9b22acf0-c85a-4825-9e3d-94de47bb058f",
+      "createdAt": "2026-10-06T00:57:33.747Z",
+      "startsAt": "2026-10-06T00:57:33.747Z"
+    },
+    "fe0fe010-0389-4cb5-8693-3a824961922d": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "subscription",
+      "title": "تم اعتماد الإيداع وتفعيل باقة الباقة البرونزية لمدة 365 يوماً",
+      "id": "fe0fe010-0389-4cb5-8693-3a824961922d",
+      "createdAt": "2026-10-06T01:14:35.656Z",
+      "startsAt": "2026-10-06T01:14:35.656Z"
+    },
+    "f9a18382-58fe-4926-9bc1-3e1018e2858a": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "deposit",
+      "title": "تم إلغاء طلب الإيداع لباقة الباقة الذهبية",
+      "id": "f9a18382-58fe-4926-9bc1-3e1018e2858a",
+      "createdAt": "2026-10-06T01:26:27.097Z",
+      "startsAt": "2026-10-06T01:26:27.097Z"
+    },
+    "d4dc492c-c6b3-4484-90b3-d6fd7e46c254": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "subscription",
+      "title": "تم اعتماد الإيداع وتفعيل باقة الباقة الفضية لمدة 365 يوماً",
+      "id": "d4dc492c-c6b3-4484-90b3-d6fd7e46c254",
+      "createdAt": "2026-10-06T01:30:41.007Z",
+      "startsAt": "2026-10-06T01:30:41.007Z"
+    },
+    "6922bf36-45e7-44e3-aa2f-94c1a710ebeb": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "withdrawal",
+      "title": "حجز رصيد لطلب سحب قيد المراجعة",
+      "amountCents": -500,
+      "id": "6922bf36-45e7-44e3-aa2f-94c1a710ebeb",
+      "createdAt": "2026-10-06T01:31:07.533Z",
+      "startsAt": "2026-10-06T01:31:07.533Z"
+    },
+    "e7c4a1c7-54fe-4840-bad3-794e129ae6ac": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "refund",
+      "title": "إعادة الرصيد بعد رفض السحب: لاحقا",
+      "amountCents": 500,
+      "id": "e7c4a1c7-54fe-4840-bad3-794e129ae6ac",
+      "createdAt": "2026-10-06T01:31:27.581Z",
+      "startsAt": "2026-10-06T01:31:27.581Z"
+    },
+    "5664e99a-c7c9-4aa8-a0e2-a4f5bf0cb68b": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "withdrawal",
+      "title": "حجز رصيد لطلب سحب قيد المراجعة",
+      "amountCents": -200,
+      "id": "5664e99a-c7c9-4aa8-a0e2-a4f5bf0cb68b",
+      "createdAt": "2026-10-06T01:32:07.477Z",
+      "startsAt": "2026-10-06T01:32:07.477Z"
+    },
+    "b5df1a19-591c-43f3-9ee8-0f7104b5506a": {
+      "memberId": "c10cd395-2a9b-4826-858a-5d9f640678ef",
+      "mode": "live",
+      "kind": "account",
+      "title": "مرحباً بك في ارتقاء — تم إنشاء حساب المسؤول الإداري",
+      "id": "b5df1a19-591c-43f3-9ee8-0f7104b5506a",
+      "createdAt": "2026-10-06T01:41:21.842Z",
+      "startsAt": "2026-10-06T01:41:21.842Z"
+    },
+    "c30ab489-3cb1-45cd-99bd-c5e691bab317": {
+      "memberId": "c10cd395-2a9b-4826-858a-5d9f640678ef",
+      "mode": "live",
+      "kind": "deposit",
+      "title": "تم إلغاء طلب الإيداع لباقة الباقة المجانية",
+      "id": "c30ab489-3cb1-45cd-99bd-c5e691bab317",
+      "createdAt": "2026-10-06T01:42:35.694Z",
+      "startsAt": "2026-10-06T01:42:35.694Z"
+    },
+    "4eead687-ecdc-499f-8fc6-a1e8fed003a6": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "refund",
+      "title": "إعادة الرصيد بعد رفض السحب: لاحاقا",
+      "amountCents": 200,
+      "id": "4eead687-ecdc-499f-8fc6-a1e8fed003a6",
+      "createdAt": "2026-10-06T01:51:23.374Z",
+      "startsAt": "2026-10-06T01:51:23.374Z"
+    },
+    "5d92a95c-0754-44a5-918a-fe9bd937592d": {
+      "memberId": "22210d16-7267-4bb2-8962-4861e4a8ca64",
+      "mode": "live",
+      "kind": "account",
+      "title": "مرحباً بك في ارتقاء — تم إنشاء حسابك",
+      "id": "5d92a95c-0754-44a5-918a-fe9bd937592d",
+      "createdAt": "2026-10-06T01:52:56.300Z",
+      "startsAt": "2026-10-06T01:52:56.300Z"
+    },
+    "e3e19bb4-e260-49e6-9ef6-e20f42633545": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "withdrawal",
+      "title": "حجز رصيد لطلب سحب قيد المراجعة",
+      "amountCents": -500,
+      "id": "e3e19bb4-e260-49e6-9ef6-e20f42633545",
+      "createdAt": "2026-10-06T21:52:14.256Z",
+      "startsAt": "2026-10-06T21:52:14.256Z"
+    },
+    "3c3e673a-8650-4785-82a1-2e5d8ba63e95": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "refund",
+      "title": "إعادة الرصيد بعد رفض السحب: ظرظب",
+      "amountCents": 500,
+      "id": "3c3e673a-8650-4785-82a1-2e5d8ba63e95",
+      "createdAt": "2026-10-06T21:52:39.973Z",
+      "startsAt": "2026-10-06T21:52:39.973Z"
+    },
+    "ea899e9e-13df-469b-921c-1fac100941d8": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "withdrawal",
+      "title": "حجز رصيد لطلب سحب قيد المراجعة",
+      "amountCents": -500,
+      "id": "ea899e9e-13df-469b-921c-1fac100941d8",
+      "createdAt": "2026-10-06T21:52:49.875Z",
+      "startsAt": "2026-10-06T21:52:49.875Z"
+    },
+    "73b3e584-be08-4020-ad16-5adc8669ed5e": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "refund",
+      "title": "إعادة الرصيد بعد رفض السحب: مبمبمب",
+      "amountCents": 500,
+      "id": "73b3e584-be08-4020-ad16-5adc8669ed5e",
+      "createdAt": "2026-10-06T22:05:04.380Z",
+      "startsAt": "2026-10-06T22:05:04.380Z"
+    },
+    "7d33bd38-3daa-461c-a927-c7d5e83549a6": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "withdrawal",
+      "title": "حجز رصيد لطلب سحب قيد المراجعة",
+      "amountCents": -500,
+      "id": "7d33bd38-3daa-461c-a927-c7d5e83549a6",
+      "createdAt": "2026-10-06T22:05:13.321Z",
+      "startsAt": "2026-10-06T22:05:13.321Z"
+    },
+    "96d5a4f9-caee-40ef-a6fa-a6fb7a26829d": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "deposit",
+      "title": "تم إلغاء طلب الإيداع لباقة الباقة الذهبية (100 USDT)",
+      "id": "96d5a4f9-caee-40ef-a6fa-a6fb7a26829d",
+      "createdAt": "2026-10-06T22:45:06.120Z",
+      "startsAt": "2026-10-06T22:45:06.120Z"
+    },
+    "ee348f5d-6557-4dd5-a554-b729cb0f1002": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "refund",
+      "title": "إلغاء طلب السحب واستعادة الرصيد: 5 USDT",
+      "amountCents": 500,
+      "id": "ee348f5d-6557-4dd5-a554-b729cb0f1002",
+      "createdAt": "2026-10-09T01:03:18.550Z",
+      "startsAt": "2026-10-09T01:03:18.550Z"
+    },
+    "7f863609-a21a-45b9-a397-366021848344": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تعديل نقاط الشرف إلى 100: بسبب اجتهادك",
+      "id": "7f863609-a21a-45b9-a397-366021848344",
+      "createdAt": "2026-10-09T01:05:04.377Z",
+      "startsAt": "2026-10-09T01:05:04.377Z"
+    },
+    "71a69709-5f9c-46f2-b828-e642714fc56d": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "withdrawal",
+      "title": "حجز رصيد لطلب سحب: 9.25 USDT (رسوم 21%: 1.94 USDT | الصافي المحول: 7.31 USDT)",
+      "amountCents": -925,
+      "id": "71a69709-5f9c-46f2-b828-e642714fc56d",
+      "createdAt": "2026-10-09T01:21:59.309Z",
+      "startsAt": "2026-10-09T01:21:59.309Z"
+    },
+    "19392af6-2ac5-42ac-83ac-8ca09315493a": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "payout",
+      "title": "سُجّل تحويل السحب من الإدارة — تحقق من معرّف المعاملة",
+      "id": "19392af6-2ac5-42ac-83ac-8ca09315493a",
+      "createdAt": "2026-10-09T01:26:32.837Z",
+      "startsAt": "2026-10-09T01:26:32.837Z"
+    },
+    "3fd029b0-74a5-4ff6-b563-38afd9f874ae": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تعديل نقاط التميز إلى 105: مكافأة تميز إدارية",
+      "id": "3fd029b0-74a5-4ff6-b563-38afd9f874ae",
+      "createdAt": "2026-10-09T01:34:22.416Z",
+      "startsAt": "2026-10-09T01:34:22.416Z"
+    },
+    "52f0b569-3beb-4bfc-90a0-4b9795026381": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تعديل نقاط التميز إلى 110: لولو",
+      "id": "52f0b569-3beb-4bfc-90a0-4b9795026381",
+      "createdAt": "2026-10-09T01:35:54.779Z",
+      "startsAt": "2026-10-09T01:35:54.779Z"
+    },
+    "6b582d63-21f8-4c6f-a035-76f392e52061": {
+      "memberId": "22210d16-7267-4bb2-8962-4861e4a8ca64",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تعديل نقاط التميز إلى 5: ننلل",
+      "id": "6b582d63-21f8-4c6f-a035-76f392e52061",
+      "createdAt": "2026-10-09T01:38:19.918Z",
+      "startsAt": "2026-10-09T01:38:19.918Z"
+    },
+    "1888d367-785a-4e9f-a0e0-3bc249438179": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تعديل نقاط التميز إلى 5: ململ",
+      "id": "1888d367-785a-4e9f-a0e0-3bc249438179",
+      "createdAt": "2026-10-09T01:38:46.887Z",
+      "startsAt": "2026-10-09T01:38:46.887Z"
+    },
+    "bc00c00e-e72c-4fb7-bbca-b7f079a6da1f": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تم إضافة +3 نقاط تميز إلى حسابك (مكافأة تفاعل متميز)",
+      "amountCents": 3,
+      "id": "bc00c00e-e72c-4fb7-bbca-b7f079a6da1f",
+      "createdAt": "2026-10-09T01:52:16.705Z",
+      "startsAt": "2026-10-09T01:52:16.705Z"
+    },
+    "02fa3e67-502a-468b-b15b-aa939eb4983a": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "⚠️ تم تنقيص 7 نقاط تميز من حسابك (تنبيه إداري)",
+      "amountCents": -7,
+      "id": "02fa3e67-502a-468b-b15b-aa939eb4983a",
+      "createdAt": "2026-10-09T01:52:25.751Z",
+      "startsAt": "2026-10-09T01:52:25.751Z"
+    },
+    "987feaf9-ae7c-412a-80a1-c45beb855e78": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تم إضافة +99 نقاط تميز إلى حسابك (إعادة ضبط النقاط)",
+      "amountCents": 99,
+      "id": "987feaf9-ae7c-412a-80a1-c45beb855e78",
+      "createdAt": "2026-10-09T01:52:33.701Z",
+      "startsAt": "2026-10-09T01:52:33.701Z"
+    },
+    "fcb3c3c8-2c8e-4ed2-a3a0-10a918ab4b26": {
+      "memberId": "d95c1545-135f-4854-b87c-fe94a09204ec",
+      "mode": "live",
+      "kind": "honor",
+      "title": "تم إضافة +5 نقاط تميز إلى حسابك (مكافاة لنشاطك وتفاعلك)",
+      "amountCents": 5,
+      "id": "fcb3c3c8-2c8e-4ed2-a3a0-10a918ab4b26",
+      "createdAt": "2026-10-09T01:55:39.750Z",
+      "startsAt": "2026-10-09T01:55:39.750Z"
+    }
+  },
+  "settings": {
+    "main": {
+      "id": "main",
+      "telegramUrl": "https://t.me/Junior_saantos",
+      "minHonorToWithdraw": 60,
+      "binanceAddress": "0x71C83e2840004185fe0D5FE87756f7C99F94a1d4",
+      "okxAddress": "0x39a164b38d3566144e59103e3a537f71B8497F87",
+      "depositsEnabled": true,
+      "fundingDescription": "إيداع USDT على شبكة Polygon للاشتراك في عضوية ارتقاء ذات العائد اليومي الثابت.",
+      "terms": "تخضع العضوية للمراجعة اليدوية والاعتماد الرسمي قبل تفعيل الأرباح اليومية."
+    }
+  },
+  "taskDefinitions": {},
+  "taskAssignments": {}
+}
