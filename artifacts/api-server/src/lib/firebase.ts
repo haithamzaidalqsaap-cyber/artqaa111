@@ -1,5 +1,9 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, getDocs, collection } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, getDocs, collection, setLogLevel } from "firebase/firestore";
+
+try {
+  setLogLevel("silent");
+} catch {}
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,7 +30,7 @@ function getFirebaseConfig() {
   }
   return {
     projectId: "practical-axon-t77bw",
-    firestoreDatabaseId: "ai-studio-artqaa-ecd369ff-e55e-4e89-8ad1-05af7ab529cb",
+    firestoreDatabaseId: "irtiqa-platform",
   };
 }
 
@@ -188,45 +192,7 @@ export async function ensureInitialFirebaseData() {
     for (const p of defaultPlans) {
       await collections.plans.doc(p.id).set(p, { merge: true });
     }
-
-    // Sync Members to Firestore
-    if (collections.users) {
-      const members = await prisma.member.findMany();
-      for (const m of members) {
-        await collections.users.doc(m.id).set({
-          id: m.id,
-          name: m.name,
-          phone: m.phone,
-          memberId: m.memberId,
-          role: m.role,
-          honorPoints: m.honorPoints,
-          createdAt: m.createdAt.toISOString(),
-        });
-      }
-    }
-
-    // Sync Deposits to Firestore
-    if (collections.deposits) {
-      const deposits = await prisma.deposit.findMany({ include: { member: true } });
-      for (const d of deposits) {
-        await collections.deposits.doc(d.id).set({
-          ...depositView(d),
-          createdAt: d.createdAt.toISOString(),
-        });
-      }
-    }
-
-    // Sync Withdrawals to Firestore
-    if (collections.withdrawals) {
-      const withdrawals = await prisma.withdrawal.findMany({ include: { member: true } });
-      for (const w of withdrawals) {
-        await collections.withdrawals.doc(w.id).set({
-          ...withdrawalView(w),
-          createdAt: w.createdAt.toISOString(),
-        });
-      }
-    }
   } catch (err) {
-    // Graceful fallback to local persistence
+    // Graceful fallback
   }
 }

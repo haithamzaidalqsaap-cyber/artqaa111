@@ -25,10 +25,6 @@ const PORT = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === "production";
 
 async function startServer() {
-  // Ensure initial Firebase Firestore data (plans & settings)
-  await ensureInitialFirebaseData().catch((err) => {
-    logger.warn({ err }, "Initial Firebase seed skipped or failed");
-  });
 
   if (!isProduction) {
     const { createServer: createViteServer } = await import("vite");
@@ -54,6 +50,9 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     logger.info({ port: PORT }, `Server listening on http://0.0.0.0:${PORT}`);
+    ensureInitialFirebaseData().catch((err) => {
+      logger.warn({ err }, "Initial Firebase seed skipped or failed");
+    });
     try {
       startAccrualWorker();
     } catch (e) {

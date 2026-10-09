@@ -28,10 +28,12 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function verifyPassword(password: string, encoded?: string): Promise<boolean> {
-  const [salt, stored] = (encoded ?? "00000000000000000000000000000000:" + "00".repeat(64)).split(":");
-  const hash = await scrypt(password, salt!, 64) as Buffer;
-  const expected = Buffer.from(stored!, "hex");
-  return hash.length === expected.length && timingSafeEqual(hash, expected) && !!encoded;
+  if (!encoded || !encoded.includes(":")) return false;
+  const [salt, stored] = encoded.split(":");
+  if (!salt || !stored) return false;
+  const hash = await scrypt(password, salt, 64) as Buffer;
+  const expected = Buffer.from(stored, "hex");
+  return hash.length === expected.length && timingSafeEqual(hash, expected);
 }
 
 export async function startSession(req: Request, res: Response, memberId: string): Promise<string> {
