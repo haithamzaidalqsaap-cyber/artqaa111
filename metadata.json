@@ -1,0 +1,6 @@
+{
+  "name": "ارتقاء - منصة العضوية والاستثمار",
+  "description": "منصة ارتقاء: عضوية سنوية بإيداع USDT على شبكة Polygon ومراجعة يدوية وربح يومي ثابت تحدده الإدارة.",
+  "permissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

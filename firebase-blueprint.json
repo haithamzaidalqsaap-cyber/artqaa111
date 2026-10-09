@@ -1,0 +1,156 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered member profile and balances",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "payoutAddress": { "type": "string", "maxLength": 66 },
+        "role": { "type": "string", "enum": ["member", "admin"] },
+        "honorPoints": { "type": "number" },
+        "balance": { "type": "number" },
+        "totalEarned": { "type": "number" },
+        "referralCode": { "type": "string", "maxLength": 20 },
+        "inviterId": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "phone", "role", "active"]
+    },
+    "Plan": {
+      "title": "Plan",
+      "description": "Membership investment and profit plans",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 500 },
+        "annualPrice": { "type": "number" },
+        "dailyProfit": { "type": "number" },
+        "active": { "type": "boolean" },
+        "configured": { "type": "boolean" }
+      },
+      "required": ["id", "name", "annualPrice", "dailyProfit", "active"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "User plan subscriptions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "memberId": { "type": "string" },
+        "planId": { "type": "string" },
+        "planName": { "type": "string" },
+        "planDescription": { "type": "string" },
+        "annualPrice": { "type": "number" },
+        "dailyProfit": { "type": "number" },
+        "startsAt": { "type": "string" },
+        "expiresAt": { "type": "string" },
+        "lastCreditedDay": { "type": "number" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "memberId", "planId", "annualPrice", "dailyProfit", "startsAt", "expiresAt"]
+    },
+    "Deposit": {
+      "title": "Deposit",
+      "description": "Deposit proofs and review statuses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "memberId": { "type": "string" },
+        "planId": { "type": "string" },
+        "planName": { "type": "string" },
+        "amount": { "type": "number" },
+        "dailyProfit": { "type": "number" },
+        "channel": { "type": "string" },
+        "address": { "type": "string" },
+        "terms": { "type": "string" },
+        "status": { "type": "string", "enum": ["awaiting_receipt", "pending", "approved", "rejected"] },
+        "txHash": { "type": "string" },
+        "receiptUrl": { "type": "string" },
+        "reviewNote": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "memberId", "planId", "amount", "status", "createdAt"]
+    },
+    "Withdrawal": {
+      "title": "Withdrawal",
+      "description": "Withdrawal requests and review workflow",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "memberId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "processing", "completed"] },
+        "address": { "type": "string" },
+        "txHash": { "type": "string" },
+        "reviewNote": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "memberId", "amount", "status", "address", "createdAt"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Financial activity feed for member",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "memberId": { "type": "string" },
+        "title": { "type": "string" },
+        "kind": { "type": "string" },
+        "amount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "memberId", "title", "kind", "amount", "createdAt"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Global administration settings",
+      "type": "object",
+      "properties": {
+        "telegramUrl": { "type": "string" },
+        "binanceAddress": { "type": "string" },
+        "okxAddress": { "type": "string" },
+        "depositsEnabled": { "type": "boolean" },
+        "fundingDescription": { "type": "string" },
+        "terms": { "type": "string" },
+        "minimumWithdrawal": { "type": "number" },
+        "currency": { "type": "string" },
+        "network": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User member documents"
+    },
+    "/plans/{planId}": {
+      "schema": { "$ref": "#/entities/Plan" },
+      "description": "Investment plans"
+    },
+    "/subscriptions/{subId}": {
+      "schema": { "$ref": "#/entities/Subscription" },
+      "description": "Active user memberships"
+    },
+    "/deposits/{depositId}": {
+      "schema": { "$ref": "#/entities/Deposit" },
+      "description": "Deposit requests"
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": { "$ref": "#/entities/Withdrawal" },
+      "description": "Withdrawal requests"
+    },
+    "/activities/{activityId}": {
+      "schema": { "$ref": "#/entities/Activity" },
+      "description": "Activity logs"
+    },
+    "/settings/main": {
+      "schema": { "$ref": "#/entities/Setting" },
+      "description": "System settings"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "artifacts/*",
+    "lib/*",
+    "scripts"
+  ],
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "prisma generate && vite build --config artifacts/irtiqa/vite.config.ts",
+    "start": "node server.ts",
+    "lint": "tsc -p artifacts/irtiqa/tsconfig.json --noEmit"
+  },
+  "prisma": {
+    "schema": "artifacts/api-server/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^8.2.0",
+    "@prisma/client": "^6.19.2",
+    "@replit/connectors-sdk": "^0.4.3",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "firebase": "^12.19.0",
+    "firebase-admin": "^14.5.0",
+    "pino": "^9.14.0",
+    "pino-http": "^10.5.0",
+    "tsx": "^4.21.0",
+    "vite": "^7.3.2"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "prisma": "^6.19.2",
+    "typescript": "~5.9.3"
+  }
+}
