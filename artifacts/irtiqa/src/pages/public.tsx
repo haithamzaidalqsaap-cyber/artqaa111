@@ -1,14 +1,20 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import {
   Check, Settings2, ShieldCheck, CheckCircle2, TrendingUp, Users2, LockKeyhole, Zap,
-  ArrowUpRight, Crown, Gem, Award, Shield, Star, Info, HelpCircle
+  ArrowUpRight, Crown, Gem, Award, Shield, Star, Info, HelpCircle, Wallet, ArrowDownToLine, Loader2
 } from "lucide-react";
-import { useListPlans, getListPlansQueryKey, useGetDashboard, getGetDashboardQueryKey } from "@workspace/api-client-react";
+import { useListPlans, getListPlansQueryKey, useGetDashboard, getGetDashboardQueryKey, type Plan } from "@workspace/api-client-react";
 import { PageHead, Skel, ErrorBox } from "@/components/brand";
 import { useSessionUser } from "@/components/shell";
-import { usdt, FREE_PLAN_ID, planDurationDays } from "@/lib/helpers";
+import { usdt, FREE_PLAN_ID, planDurationDays, apiError } from "@/lib/helpers";
 import { useLanguage } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
+import { useInvalidateAll } from "@/lib/invalidate";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const planMeta: Record<string, {
   tagAr: string;
@@ -89,8 +95,13 @@ const planMeta: Record<string, {
 export function PlansPage() {
   const { user } = useSessionUser();
   const { isEn, lang } = useLanguage();
+  const { toast } = useToast();
+  const inv = useInvalidateAll();
   const dash = useGetDashboard({ query: { enabled: !!user, queryKey: getGetDashboardQueryKey() } });
   const plans = useListPlans({ query: { queryKey: getListPlansQueryKey(), refetchInterval: 30000 } });
+
+  const [planToActivate, setPlanToActivate] = useState<{ plan: any; cost: number; isUpgrade: boolean } | null>(null);
+  const [subscribing, setSubscribing] = useState(false);
 
   const activeSub = dash.data?.subscription;
   const hasActiveSub = !!activeSub && !!activeSub.active;
@@ -99,6 +110,7 @@ export function PlansPage() {
   const getPlanPrice = (p: { id?: string; annualPrice?: number }) => (p?.id === FREE_PLAN_ID && Number(p?.annualPrice) === 0 ? 4 : Number(p?.annualPrice ?? 0));
   const activePlanObj = list.find((p) => p && p.id === currentPlanId);
   const activePlanPrice = activePlanObj ? getPlanPrice(activePlanObj) : (activeSub?.plan ? getPlanPrice(activeSub.plan) : 0);
+  const userBalance = Number(dash.data?.user?.balance ?? user?.balance ?? 0);
 
   return (
     <>
@@ -106,9 +118,41 @@ export function PlansPage() {
         eyebrow={isEn ? "Membership & Investment" : "العضوية والاستثمار"}
         title={isEn ? "IRTIQA Investment Tiers" : "باقات ارتقاء الاستثمارية"}
         desc={isEn
-          ? "Select your annual membership tier with automated daily returns distributed every 24 hours. Upgrade seamlessly at any time by paying the difference only."
-          : "اختر باقتك الاستثمارية بعوائد يومية ثابتة ومؤكدة تُودع آلياً في محفظتك كل 24 ساعة. يمكنك في أي وقت الترقية لباقة أعلى ودفع فارق السعر فقط."}
+          ? "Select your annual membership tier with automated daily returns distributed every 24 hours. Activate instantly from your available wallet balance."
+          : "اختر باقتك الاستثمارية بعوائد يومية ثابتة ومؤكدة تُودع آلياً في محفظتك كل 24 ساعة. يمكنك تفعيل أي باقة فوراً بنقرة واحدة من رصيد محفظتك المتاح."}
       />
+
+      {/* User Wallet Balance & Quick Recharge Banner */}
+      {user && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 rounded-3xl border border-primary/30 bg-[hsl(40_62%_68%/.06)] p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/20 text-primary shrink-0">
+              <Wallet className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{isEn ? "Your Available Wallet Balance" : "رصيدك المتاح حالياً في المحفظة"}</p>
+              <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
+                <span className="num font-display text-2xl sm:text-3xl font-bold gold-text">{usdt(userBalance)}</span>
+                <span className="text-xs text-accent font-medium">
+                  {isEn ? "· Ready to activate any tier from your balance" : "· جاهز لتفعيل أي باقة أدناه مباشرة بنقرة واحدة"}
+                </span>
+              </div>
+            </div>
+          </div>
+          <Link
+            href="/deposits"
+            data-testid="link-recharge-from-plans"
+            className="btn-gold shrink-0 px-5 py-2.5 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shadow-md hover:shadow-lg"
+          >
+            <ArrowDownToLine className="h-4 w-4" />
+            <span>{isEn ? "Recharge Balance (USDT)" : "شحن رصيد المحفظة (USDT)"}</span>
+          </Link>
+        </motion.div>
+      )}
 
       {/* Active Subscription Upgrade Notice */}
       {hasActiveSub && activeSub && (
@@ -127,14 +171,10 @@ export function PlansPage() {
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {isEn
-                ? "Flexible Upgrade active: When choosing any higher tier, your current investment is automatically deducted and you only pay the price difference!"
-                : "ميزة الترقية المرنة مفعلة: عند اختيار أي باقة أعلى، سيتم تلقائياً خصم قيمة باقتك الحالية وستدفع فقط فارق السعر دون تكرار دفع ما دفعته سابقاً!"}
+                ? "Flexible Upgrade active: When choosing any higher tier, your current investment is automatically deducted and you only pay the price difference from your balance!"
+                : "ميزة الترقية المرنة مفعلة: عند اختيار أي باقة أعلى، سيتم تلقائياً خصم قيمة باقتك الحالية وستدفع فقط فارق السعر من رصيدك دون تكرار دفع ما دفعته سابقاً!"}
             </p>
           </div>
-          <Link href="/deposits" className="btn-gold shrink-0 px-5 py-2.5 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap">
-            <span>{isEn ? "Upgrade via Deposit Page" : "الترقية من صفحة الإيداع"}</span>
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
         </motion.div>
       )}
 
@@ -194,6 +234,9 @@ export function PlansPage() {
             const isUpgrade = hasActiveSub && !isCurrent && targetPrice > activePlanPrice;
             const isLowerOrSame = hasActiveSub && !isCurrent && targetPrice <= activePlanPrice;
             const upgradeDiff = isUpgrade ? Math.max(0, targetPrice - activePlanPrice) : targetPrice;
+            const requiredCost = isUpgrade ? upgradeDiff : targetPrice;
+            const hasBalance = userBalance >= requiredCost;
+            const missingBalance = Math.max(0, requiredCost - userBalance);
 
             return (
               <motion.div
@@ -347,23 +390,23 @@ export function PlansPage() {
 
                 {/* CTA Action Button */}
                 <div className="mt-6 pt-2">
-                  {isCurrent ? (
+                  {!user ? (
+                    <Link
+                      href="/register"
+                      data-testid={`link-join-${p.id}`}
+                      className="btn-gold block w-full py-3 text-center text-xs sm:text-sm font-semibold"
+                    >
+                      {isEn ? "Create Account to Subscribe" : "أنشئ حسابًا للاشتراك"}
+                    </Link>
+                  ) : isCurrent ? (
                     <button
                       type="button"
                       disabled
-                      className="w-full rounded-xl border border-accent/40 bg-accent/10 py-3 text-center text-xs font-semibold text-accent cursor-default"
+                      className="w-full rounded-xl border border-accent/40 bg-accent/10 py-3 text-center text-xs font-semibold text-accent cursor-default flex items-center justify-center gap-1.5"
                     >
-                      {isEn ? "Current Active Tier" : "باقتك الحالية المفعلة"}
+                      <Check className="h-4 w-4" />
+                      <span>{isEn ? "Current Active Tier" : "باقتك الحالية المفعلة"}</span>
                     </button>
-                  ) : isUpgrade ? (
-                    <Link
-                      href={`/deposits?plan=${p.id}`}
-                      data-testid={`link-upgrade-${p.id}`}
-                      className="btn-gold block w-full py-3 text-center text-xs sm:text-sm font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-1.5"
-                    >
-                      <ArrowUpRight className="h-4 w-4" />
-                      <span>{isEn ? `Upgrade Now (Pay Diff: ${usdt(upgradeDiff)})` : `ترقية الآن (ادفع الفارق: ${usdt(upgradeDiff)})`}</span>
-                    </Link>
                   ) : isLowerOrSame ? (
                     <button
                       type="button"
@@ -372,18 +415,35 @@ export function PlansPage() {
                     >
                       {isEn ? "Lower Than Current Tier" : "أدنى من باقتك الحالية"}
                     </button>
-                  ) : (
-                    <Link
-                      href={user ? "/deposits" : "/register"}
-                      data-testid={`link-join-${p.id}`}
-                      className="btn-gold block w-full py-3 text-center text-xs sm:text-sm font-semibold"
+                  ) : hasBalance ? (
+                    <button
+                      type="button"
+                      data-testid={`btn-activate-plan-${p.id}`}
+                      onClick={() => setPlanToActivate({ plan: p, cost: requiredCost, isUpgrade })}
+                      className="btn-gold block w-full py-3 text-center text-xs sm:text-sm font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      {user
-                        ? p.id === FREE_PLAN_ID
-                          ? (isEn ? "Activate Free Tier (4 USDT)" : "تفعيل الباقة المجانية (4 USDT)")
-                          : (isEn ? `Subscribe to ${p.name}` : `اشتراك في ${p.name}`)
-                        : (isEn ? "Create Account to Subscribe" : "أنشئ حسابًا للاشتراك")}
-                    </Link>
+                      {isUpgrade ? <ArrowUpRight className="h-4 w-4" /> : <Gem className="h-4 w-4" />}
+                      <span>
+                        {isUpgrade
+                          ? (isEn ? `Upgrade Now (Deduct ${usdt(requiredCost)})` : `ترقية الباقة الآن (خصم ${usdt(requiredCost)} من رصيدك)`)
+                          : (isEn ? `Activate Tier (${usdt(requiredCost)} from Balance)` : `تفعيل الباقة الآن من رصيدك (${usdt(requiredCost)})`)}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="rounded-xl border border-primary/30 bg-primary/10 p-2 text-center text-xs flex items-center justify-between px-3">
+                        <span className="text-muted-foreground">{isEn ? "Your Balance:" : "رصيدك المتاح:"} <strong className="num text-foreground">{usdt(userBalance)}</strong></span>
+                        <span className="text-primary font-bold">{isEn ? `Missing: ${usdt(missingBalance)}` : `ينقصك: ${usdt(missingBalance)}`}</span>
+                      </div>
+                      <Link
+                        href={`/deposits?amount=${Math.ceil(missingBalance)}`}
+                        data-testid={`link-recharge-${p.id}`}
+                        className="btn-gold block w-full py-2.5 text-center text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md"
+                      >
+                        <ArrowDownToLine className="h-4 w-4" />
+                        <span>{isEn ? `Recharge ${usdt(missingBalance)} to Activate` : `اشحن رصيدك بـ ${usdt(missingBalance)} لتفعيل الباقة`}</span>
+                      </Link>
+                    </div>
                   )}
                 </div>
               </motion.div>
@@ -398,33 +458,125 @@ export function PlansPage() {
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2 text-primary font-display font-semibold text-base sm:text-lg">
               <Info className="h-5 w-5 shrink-0" />
-              <h3>{isEn ? "How Flexible Tier Upgrades Work in IRTIQA" : "كيف يعمل نظام الترقية ودفع الفارق في ارتقاء؟"}</h3>
+              <h3>{isEn ? "How Account Top-Up & Tier Activation Works" : "كيف يعمل نظام شحن الرصيد وتفعيل الباقات؟"}</h3>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {isEn
-                ? "To maximize investor capital efficiency, you can upgrade to higher tiers at any time by paying ONLY the price difference, without ever repurchasing the tier from scratch."
-                : "حرصاً على حماية حقوقك الاستثمارية، يمكنك في أي وقت الانتقال إلى باقة أعلى عن طريق دفع فارق السعر بين الباقتين فقط، دون الحاجة لدفع القيمة الكاملة من جديد."}
+                ? "First, recharge your wallet balance with USDT (Polygon). Once confirmed by management, your balance appears in your wallet and you can activate any investment tier with 1 click directly from your balance!"
+                : "بكل بساطة: اشحن رصيد محفظتك عبر USDT على شبكة Polygon. بعد تأكيد الإيداع يظهر الرصيد في حسابك فوراً، ثم تضغط زر تفعيل الباقة لتفعيلها مباشرة من رصيدك وتبدأ أرباحك اليومية!"}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
               <div className="rounded-xl border border-border/60 bg-background/30 p-2.5">
-                <p className="text-muted-foreground font-medium">{isEn ? "Upgrade $25 to $50:" : "ترقية من 25$ إلى 50$:"}</p>
-                <p className="text-accent font-semibold mt-1 num">{isEn ? "Pay 25 USDT only" : "تدفع 25 USDT فقط"}</p>
+                <p className="text-muted-foreground font-medium">{isEn ? "1. Recharge Wallet" : "1. اشحن رصيد المحفظة:"}</p>
+                <p className="text-accent font-semibold mt-1">{isEn ? "Add USDT on Polygon" : "حوّل USDT وأرفق الإيصال"}</p>
               </div>
               <div className="rounded-xl border border-border/60 bg-background/30 p-2.5">
-                <p className="text-muted-foreground font-medium">{isEn ? "Upgrade $50 to $100:" : "ترقية من 50$ إلى 100$:"}</p>
-                <p className="text-accent font-semibold mt-1 num">{isEn ? "Pay 50 USDT only" : "تدفع 50 USDT فقط"}</p>
+                <p className="text-muted-foreground font-medium">{isEn ? "2. Activate Tier" : "2. فعّل الباقة بنقرة واحدة:"}</p>
+                <p className="text-primary font-semibold mt-1">{isEn ? "Deducted from balance" : "خصم فوري من رصيدك"}</p>
               </div>
               <div className="rounded-xl border border-border/60 bg-background/30 p-2.5">
-                <p className="text-muted-foreground font-medium">{isEn ? "Upgrade $100 to $250:" : "ترقية من 100$ إلى 250$:"}</p>
-                <p className="text-accent font-semibold mt-1 num">{isEn ? "Pay 150 USDT only" : "تدفع 150 USDT فقط"}</p>
+                <p className="text-muted-foreground font-medium">{isEn ? "3. Receive Daily Profits" : "3. استلم أرباحك يومياً:"}</p>
+                <p className="text-accent font-semibold mt-1">{isEn ? "Automated 24h payout" : "توزيع آلي وسحب مباشر"}</p>
               </div>
             </div>
           </div>
           <Link href={user ? "/deposits" : "/register"} className="btn-gold whitespace-nowrap px-6 py-3 text-xs sm:text-sm font-semibold shrink-0">
-            {user ? (isEn ? "Go to Deposit & Upgrade" : "الانتقال لصفحة الإيداع والترقية") : (isEn ? "Start Investing Now" : "ابدأ استثمارك الآن")}
+            {user ? (isEn ? "Recharge Balance Now" : "شحن رصيد المحفظة الآن") : (isEn ? "Start Investing Now" : "ابدأ استثمارك الآن")}
           </Link>
         </div>
       </div>
+
+      {/* Confirmation Dialog for Balance-based Plan Activation */}
+      <AlertDialog open={!!planToActivate} onOpenChange={(open) => !open && !subscribing && setPlanToActivate(null)}>
+        <AlertDialogContent className="glass-strong border-border bg-transparent">
+          <AlertDialogHeader className={isEn ? "text-left sm:text-left" : "text-right sm:text-right"}>
+            <AlertDialogTitle className="font-display">
+              {planToActivate?.isUpgrade
+                ? (isEn ? `Confirm Upgrade to ${planToActivate.plan.name}` : `تأكيد الترقية إلى باقة ${planToActivate.plan.name}`)
+                : (isEn ? `Confirm Activation of ${planToActivate?.plan.name}` : `تأكيد تفعيل باقة ${planToActivate?.plan.name}`)}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isEn
+                ? "The required amount will be deducted directly from your available wallet balance. Daily profit accruals will start immediately."
+                : "سيتم خصم قيمة الاشتراك مباشرة من رصيدك المتاح في المحفظة، وسيبدأ احتساب الأرباح اليومية تلقائياً كل 24 ساعة."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {planToActivate && (
+            <div className="rounded-2xl border border-border/60 bg-background/30 p-4 space-y-2.5 text-xs sm:text-sm">
+              <div className="flex justify-between items-center py-1 border-b border-border/30">
+                <span className="text-muted-foreground">{isEn ? "Plan Name:" : "اسم الباقة:"}</span>
+                <span className="font-bold text-foreground">{planToActivate.plan.name}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border/30">
+                <span className="text-muted-foreground">{isEn ? "Deduction from Balance:" : "المبلغ المخصوم من الرصيد:"}</span>
+                <span className="num font-bold gold-text text-sm sm:text-base">{usdt(planToActivate.cost)}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border/30">
+                <span className="text-muted-foreground">{isEn ? "Current Available Balance:" : "رصيدك الحالي المتاح:"}</span>
+                <span className="num font-semibold text-foreground">{usdt(userBalance)}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-border/30">
+                <span className="text-muted-foreground">{isEn ? "Balance After Activation:" : "الرصيد المتبقي بعد التفعيل:"}</span>
+                <span className="num font-semibold text-accent">{usdt(Math.max(0, userBalance - planToActivate.cost))}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground">{isEn ? "Fixed Daily Return:" : "الربح اليومي الثابت:"}</span>
+                <span className="num font-bold text-primary">{usdt(planToActivate.plan.dailyProfit)} / {isEn ? "day" : "يومياً"}</span>
+              </div>
+            </div>
+          )}
+
+          <AlertDialogFooter className="gap-2 sm:flex-row-reverse sm:justify-start">
+            <AlertDialogAction
+              data-testid="btn-confirm-activate-plan"
+              disabled={subscribing}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!planToActivate) return;
+                setSubscribing(true);
+                try {
+                  const res = await fetch("/api/subscriptions", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      ...(typeof localStorage !== "undefined" && localStorage.getItem("irtiqa_token") ? { "Authorization": `Bearer ${localStorage.getItem("irtiqa_token")}` } : {}),
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({ planId: planToActivate.plan.id }),
+                  });
+                  const data = await res.json().catch(() => null);
+                  if (!res.ok) {
+                    throw new Error(data?.message || data?.error || (isEn ? "Activation failed" : "تعذر تفعيل الباقة"));
+                  }
+                  toast({
+                    title: isEn ? "Tier Activated Successfully 🎉" : "تم تفعيل الباقة بنجاح 🎉",
+                    description: isEn
+                      ? `${planToActivate.plan.name} is now active. Daily profits will accumulate every 24 hours.`
+                      : `تم تفعيل باقة ${planToActivate.plan.name} وخصم ${usdt(planToActivate.cost)} من رصيدك. سيبدأ توزيع العوائد اليومية آلياً كل 24 ساعة.`,
+                  });
+                  inv();
+                  setPlanToActivate(null);
+                } catch (err: any) {
+                  toast({
+                    title: isEn ? "Activation Failed" : "تعذر تفعيل الباقة",
+                    description: err.message || (isEn ? "Please try again later" : "يرجى المحاولة مجدداً"),
+                    variant: "destructive",
+                  });
+                } finally {
+                  setSubscribing(false);
+                }
+              }}
+              className="btn-gold border-0 cursor-pointer"
+            >
+              {subscribing ? (isEn ? "Activating..." : "جارٍ التفعيل...") : (isEn ? "Confirm & Activate Now" : "تأكيد التفعيل وخصم المبلغ")}
+            </AlertDialogAction>
+            <AlertDialogCancel disabled={subscribing} className="btn-ghost bg-transparent">
+              {isEn ? "Cancel" : "تراجع"}
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

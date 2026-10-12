@@ -3,8 +3,9 @@ import * as V from "@workspace/api-zod";
 import { prisma } from "../lib/prisma";
 import { requireMember } from "../lib/auth";
 import { HttpError, input } from "../lib/http";
-import { accrue, activityView, cents, dashboard, lockMember, MIN_WITHDRAWAL_CENTS, money, planView, settings, validAddress } from "../lib/platform";
+import { accrue, activityView, cents, dashboard, lockMember, MIN_WITHDRAWAL_CENTS, money, planView, settings, validAddress, DAY, FREE_PLAN_ID, planDurationDays, subscriptionView, safeIso } from "../lib/platform";
 import { withdrawalView } from "../lib/finance";
+import { collections } from "../lib/firebase";
 const router: IRouter = Router();
 router.get("/team", requireMember, async (req, res) => {
   const user = await prisma.member.findUniqueOrThrow({where: {id: req.member!.id}});
@@ -96,8 +97,9 @@ router.get("/team", requireMember, async (req, res) => {
         investorMembersCount++;
       }
     }
-    const createdDate = new Date(m.createdAt);
-    if (createdDate >= oneDayAgo) {
+
+    const createdDate = m.createdAt ? (m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt)) : null;
+    if (createdDate && !isNaN(createdDate.getTime()) && createdDate >= oneDayAgo) {
       todayJoinedCount++;
     }
 
@@ -106,7 +108,7 @@ router.get("/team", requireMember, async (req, res) => {
       memberId: String(m.memberId),
       name: String(m.name),
       phone: m.phone ? `${m.phone.slice(0, 4)}****${m.phone.slice(-3)}` : "",
-      createdAt: m.createdAt instanceof Date ? m.createdAt.toISOString() : new Date(m.createdAt).toISOString(),
+      createdAt: safeIso(m.createdAt),
       active: m.active !== false,
       honorPoints: Number(m.honorPoints ?? 100),
       planName: activeSub ? activeSub.planName : (userSubs.length ? "عقد مكتمل" : "بانتظار الاشتراك"),
@@ -239,6 +241,186 @@ router.post("/withdrawals/:id/cancel", requireMember, async (req, res) => {
   });
   res.json({ success: true, message: "تم إلغاء طلب السحب واستعادة الرصيد بنجاح." });
 });
-// Retired simulation endpoints must not mint real balances.
-router.post(["/subscriptions", "/tasks/:id/complete"], requireMember, () => { throw new HttpError(410, "يُفعّل الاشتراك بعد تأكيد الإيداع من الإدارة؛ لا توجد مكافآت مهام."); });
+// Subscribe to or upgrade plan directly using account balance
+const handlePlanSubscription = async (req: any, res: any) => {
+  const planId = req.body?.planId;
+  if (!planId || typeof planId !== "string") {
+    throw new HttpError(400, "يرجى تحديد الباقة المطلوبة.");
+  }
+
+  const result = await prisma.$transaction(async (tx: any) => {
+    const user = await lockMember(tx, req.member!.id);
+    const plan = await tx.plan.findUnique({ where: { id: planId } });
+    if (!plan || !plan.active || !plan.configured) {
+      throw new HttpError(404, "الباقة المطلوبة غير متوفرة أو غير نشطة.");
+    }
+
+    const memberSubs = await tx.subscription.findMany({
+      where: { memberId: user.id },
+      orderBy: { annualPriceCents: "desc" },
+    });
+    const activeSub = memberSubs.find((s: any) => new Date(s.expiresAt).getTime() > Date.now());
+
+    if (activeSub && activeSub.planId === plan.id) {
+      throw new HttpError(400, "أنت مشترك بالفعل في هذه الباقة حالياً.");
+    }
+
+    const isFree = plan.id === FREE_PLAN_ID;
+    const targetPriceCents = isFree ? 400 : Number(plan.annualPriceCents || 0);
+
+    const activeSubPlan = activeSub?.planId ? await tx.plan.findUnique({ where: { id: activeSub.planId } }) : null;
+    const currentPriceCents = activeSubPlan ? Number(activeSubPlan.annualPriceCents || 0) : (activeSub ? (Number(activeSub.annualPriceCents) > 0 ? Number(activeSub.annualPriceCents) : (activeSub.planId === FREE_PLAN_ID ? 400 : 0)) : 0);
+
+    if (activeSub && targetPriceCents <= currentPriceCents) {
+      throw new HttpError(400, "يمكنك فقط الترقية إلى باقة أعلى ودفع فارق السعر بينهما.");
+    }
+
+    let costCents = targetPriceCents;
+    let isUpgrade = false;
+    if (activeSub && targetPriceCents > currentPriceCents) {
+      costCents = Math.max(0, targetPriceCents - currentPriceCents);
+      isUpgrade = true;
+    }
+
+    const currentBalanceCents = Number(user.realBalanceCents ?? user.balanceCents ?? 0);
+    if (currentBalanceCents < costCents) {
+      const missing = money(costCents - currentBalanceCents);
+      throw new HttpError(
+        400,
+        `رصيدك المتاح (${money(currentBalanceCents)} USDT) غير كافٍ. المطلوب: ${money(costCents)} USDT. تحتاج لشحن ${missing} USDT في رصيدك لتفعيل هذه الباقة.`
+      );
+    }
+
+    const now = new Date();
+    const durationDays = planDurationDays(plan.id);
+
+    // Deduct cost from balance
+    const updatedMember = await tx.member.update({
+      where: { id: user.id },
+      data: {
+        realBalanceCents: { decrement: costCents },
+        honorPoints: 100,
+        active: true,
+      },
+    });
+
+    // Terminate existing subscriptions
+    for (const sub of memberSubs) {
+      if (new Date(sub.expiresAt).getTime() > now.getTime()) {
+        await tx.subscription.update({ where: { id: sub.id }, data: { expiresAt: now } }).catch(() => {});
+      }
+    }
+
+    // Create new subscription
+    const newSub = await tx.subscription.create({
+      data: {
+        memberId: user.id,
+        planId: plan.id,
+        planName: plan.name,
+        planDescription: plan.description || "",
+        annualPriceCents: plan.annualPriceCents,
+        dailyTasks: 0,
+        taskRewardCents: 0,
+        dailyProfitCents: plan.dailyProfitCents,
+        startsAt: now,
+        expiresAt: new Date(now.getTime() + DAY * durationDays),
+        lastCreditedDay: -1,
+        mode: "live",
+      },
+    });
+
+    // Create financial activity entry
+    await tx.activity.create({
+      data: {
+        memberId: user.id,
+        mode: "live",
+        kind: isUpgrade ? "upgrade" : "subscription",
+        title: isUpgrade
+          ? `ترقية العضوية إلى ${plan.name} من رصيد المحفظة (خصم الفارق: ${money(costCents)} USDT)`
+          : `تفعيل باقة ${plan.name} بنجاح من رصيد المحفظة (${money(costCents)} USDT)`,
+        amountCents: -costCents,
+      },
+    });
+
+    // Referral commission distribution (L1 = 8%, L2 = 3%, L3 = 1%)
+    try {
+      if (user.inviterId && costCents > 0) {
+        const l1 = await tx.member.findUnique({ where: { id: user.inviterId } });
+        if (l1) {
+          const l1Bonus = Math.round(costCents * 0.08);
+          if (l1Bonus > 0) {
+            await tx.member.update({ where: { id: l1.id }, data: { realBalanceCents: { increment: l1Bonus } } });
+            await tx.activity.create({
+              data: {
+                memberId: l1.id,
+                mode: "live",
+                kind: "referral_bonus",
+                title: `مكافأة إحالة مباشرة (مستوى 1 - 8%): اشتراك ${user.name} في ${plan.name}`,
+                amountCents: l1Bonus,
+              },
+            });
+          }
+          if (l1.inviterId) {
+            const l2 = await tx.member.findUnique({ where: { id: l1.inviterId } });
+            if (l2) {
+              const l2Bonus = Math.round(costCents * 0.03);
+              if (l2Bonus > 0) {
+                await tx.member.update({ where: { id: l2.id }, data: { realBalanceCents: { increment: l2Bonus } } });
+                await tx.activity.create({
+                  data: {
+                    memberId: l2.id,
+                    mode: "live",
+                    kind: "referral_bonus",
+                    title: `مكافأة فريق (مستوى 2 - 3%): اشتراك ${user.name} في ${plan.name}`,
+                    amountCents: l2Bonus,
+                  },
+                });
+              }
+              if (l2.inviterId) {
+                const l3 = await tx.member.findUnique({ where: { id: l2.inviterId } });
+                if (l3) {
+                  const l3Bonus = Math.round(costCents * 0.01);
+                  if (l3Bonus > 0) {
+                    await tx.member.update({ where: { id: l3.id }, data: { realBalanceCents: { increment: l3Bonus } } });
+                    await tx.activity.create({
+                      data: {
+                        memberId: l3.id,
+                        mode: "live",
+                        kind: "referral_bonus",
+                        title: `مكافأة جيل ثالث (مستوى 3 - 1%): اشتراك ${user.name} في ${plan.name}`,
+                        amountCents: l3Bonus,
+                      },
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Referral bonus distribution error on balance subscription:", e);
+    }
+
+    if (collections.users) {
+      await collections.users.doc(user.id).set({
+        balance: money(updatedMember.realBalanceCents),
+        totalEarned: money(updatedMember.realEarnedCents),
+        active: true,
+      }, { merge: true }).catch(() => {});
+    }
+
+    return {
+      message: isUpgrade ? "تمت ترقية باقتك بنجاح" : "تم تفعيل باقتك بنجاح",
+      subscription: subscriptionView(newSub, plan),
+      newBalance: money(updatedMember.realBalanceCents),
+    };
+  });
+
+  res.json(result);
+};
+
+router.post("/subscriptions", requireMember, handlePlanSubscription);
+router.post("/member/subscribe-plan", requireMember, handlePlanSubscription);
+router.post("/tasks/:id/complete", requireMember, () => { throw new HttpError(410, "لا توجد مكافآت مهام يدوية."); });
 export default router;

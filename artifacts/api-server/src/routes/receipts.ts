@@ -1,4 +1,5 @@
 import express, { Router, type IRouter } from "express";
+import { randomUUID } from "node:crypto";
 import * as V from "@workspace/api-zod";
 import { prisma } from "../lib/prisma";
 import { requireMember } from "../lib/auth";
@@ -16,10 +17,17 @@ router.post("/receipts/upload", requireMember, async (req, res) => {
     await lockMember(tx, req.member!.id);
     const count = await tx.receiptUpload.count({where: {memberId: req.member!.id, createdAt: {gte: new Date(Date.now() - 86400_000)}}});
     if (count >= 20) throw new HttpError(429, "بلغت حد رفع الصور اليومي.");
-    if (!await tx.deposit.findFirst({where: {memberId: req.member!.id, status: "awaiting_receipt"}})) throw new HttpError(400, "أنشئ طلب إيداع أولاً.");
-    const uploadUrl = await storage.getObjectEntityUploadURL();
-    const upload = await tx.receiptUpload.create({data: {memberId: req.member!.id, objectPath: storage.normalizeObjectEntityPath(uploadUrl), contentType: data.contentType, size: data.size}});
-    return {uploadId: upload.id, uploadUrl};
+    const uploadId = randomUUID();
+    const upload = await tx.receiptUpload.create({
+      data: {
+        id: uploadId,
+        memberId: req.member!.id,
+        objectPath: `/objects/uploads/${uploadId}`,
+        contentType: data.contentType,
+        size: data.size
+      }
+    });
+    return {uploadId: upload.id, uploadUrl: `/api/receipts/upload/${upload.id}/content`};
   }, {timeout: 35000});
   res.json(V.RequestReceiptUploadResponse.parse(ticket));
 });

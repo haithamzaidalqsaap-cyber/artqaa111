@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Copy, Check, Award, Timer, ShieldAlert, ArrowUpLeft, Gem, CalendarRange, CalendarCheck, Lock, ExternalLink, Clock, Calculator, Percent } from "lucide-react";
+import { Copy, Check, Award, Timer, ShieldAlert, ArrowUpLeft, Gem, CalendarRange, CalendarCheck, Lock, ExternalLink, Clock, Calculator, Percent, Wallet, ArrowDownToLine } from "lucide-react";
 import {
   useGetDashboard, getGetDashboardQueryKey, useListActivity, getListActivityQueryKey,
   useListWithdrawals, getListWithdrawalsQueryKey, useRequestWithdrawal, useGetSettings, getGetSettingsQueryKey, useSavePayoutAddress,
@@ -148,6 +148,34 @@ export function DashboardPage() {
               <span className="text-xs text-muted-foreground">{isEn ? "Total Profits Received" : "إجمالي الأرباح المستلمة"}</span>
               <span className="num text-base sm:text-lg font-medium text-foreground">{usdt(d.user.totalEarned)}</span>
             </div>
+
+            {/* 3 Clear Action Buttons Separating Recharge, Plans, and Withdrawal */}
+            <div className="col-span-2 sm:col-span-4 pt-2 border-t border-border/30 grid grid-cols-3 gap-2">
+              <Link
+                href="/deposits"
+                data-testid="dash-action-recharge"
+                className="btn-gold py-2 sm:py-2.5 px-1 sm:px-2.5 text-[11px] sm:text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 shadow-sm text-center leading-tight min-w-0"
+              >
+                <ArrowDownToLine className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="text-center break-words sm:whitespace-nowrap">{isEn ? "Recharge Balance" : "شحن الرصيد"}</span>
+              </Link>
+              <Link
+                href="/plans"
+                data-testid="dash-action-plans"
+                className="rounded-xl border border-primary/40 bg-[hsl(40_62%_68%/.1)] hover:bg-[hsl(40_62%_68%/.18)] text-primary py-2 sm:py-2.5 px-1 sm:px-2.5 text-[11px] sm:text-xs font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 transition-colors text-center leading-tight min-w-0"
+              >
+                <Gem className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="text-center break-words sm:whitespace-nowrap">{isEn ? "Plans" : "الباقات"}</span>
+              </Link>
+              <Link
+                href="/wallet"
+                data-testid="dash-action-wallet"
+                className="btn-ghost py-2 sm:py-2.5 px-1 sm:px-2.5 text-[11px] sm:text-xs font-semibold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 text-center leading-tight min-w-0"
+              >
+                <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="text-center break-words sm:whitespace-nowrap">{isEn ? "Withdraw" : "سحب الأرباح"}</span>
+              </Link>
+            </div>
           </div>
         </motion.div>
 
@@ -192,8 +220,8 @@ export function DashboardPage() {
             ) : (
               <>
                 <p className="text-xs sm:text-sm mt-2.5 text-muted-foreground">{isEn ? "No active subscription currently" : "لا يوجد اشتراك نشط حاليًا"}</p>
-                <Link href="/deposits" data-testid="link-choose-plan" className="mt-2.5 inline-flex items-center gap-1 text-xs sm:text-sm text-primary font-medium">
-                  {isEn ? "Select a plan and begin" : "اختر باقة وابدأ الآن"} <ArrowUpLeft className="h-4 w-4" />
+                <Link href="/plans" data-testid="link-choose-plan" className="mt-2.5 inline-flex items-center gap-1 text-xs sm:text-sm text-primary font-medium">
+                  {isEn ? "Select a plan and begin" : "استعرض الباقات وابدأ الآن"} <ArrowUpLeft className="h-4 w-4" />
                 </Link>
               </>
             )}
@@ -298,7 +326,14 @@ export function WalletPage() {
   const handleCancel = async (id: string) => {
     try {
       setCancellingId(id);
-      const res = await fetch(`/api/withdrawals/${id}/cancel`, { credentials: "include", method: "POST" });
+      const token = typeof localStorage !== "undefined" ? localStorage.getItem("irtiqa_token") : null;
+      const res = await fetch(`/api/withdrawals/${id}/cancel`, {
+        method: "POST",
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || (isEn ? "Could not cancel request" : "تعذر إلغاء الطلب"));
       toast({

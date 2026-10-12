@@ -3,26 +3,21 @@ import * as V from "@workspace/api-zod";
 import { prisma } from "../lib/prisma";
 import { requireAdmin, requireMember } from "../lib/auth";
 import { HttpError, input } from "../lib/http";
-import { DAY, FREE_PLAN_ID, cents, lockMember, money } from "../lib/platform";
+import { DAY, FREE_PLAN_ID, cents, lockMember, money, safeIso, safeIsoOrNull } from "../lib/platform";
 
 const router: IRouter = Router();
 const TASKS_PER_CYCLE = 2;
 
-const taskView = (task: {
-  id: string; title: string; instructions: string; rewardCents: number; active: boolean; createdAt: Date; updatedAt: Date;
-}) => ({
+const taskView = (task: any) => ({
   id: task.id, title: task.title, instructions: task.instructions, reward: money(task.rewardCents),
-  active: task.active, createdAt: task.createdAt.toISOString(), updatedAt: task.updatedAt.toISOString(),
+  active: task.active, createdAt: safeIso(task.createdAt), updatedAt: safeIso(task.updatedAt),
 });
 
-const assignmentView = (assignment: {
-  id: string; taskTitle: string; instructions: string; rewardCents: number; status: string;
-  evidence: string; reviewNote: string; assignedAt: Date; submittedAt: Date | null; reviewedAt: Date | null;
-}) => ({
+const assignmentView = (assignment: any) => ({
   id: assignment.id, taskTitle: assignment.taskTitle, instructions: assignment.instructions,
   reward: money(assignment.rewardCents), status: assignment.status, evidence: assignment.evidence,
-  reviewNote: assignment.reviewNote, assignedAt: assignment.assignedAt.toISOString(),
-  submittedAt: assignment.submittedAt?.toISOString() ?? null, reviewedAt: assignment.reviewedAt?.toISOString() ?? null,
+  reviewNote: assignment.reviewNote, assignedAt: safeIso(assignment.assignedAt),
+  submittedAt: safeIsoOrNull(assignment.submittedAt), reviewedAt: safeIsoOrNull(assignment.reviewedAt),
 });
 
 const adminSubmissionView = (assignment: any) => ({
@@ -36,9 +31,9 @@ const adminSubmissionView = (assignment: any) => ({
   status: assignment.status as "submitted" | "approved" | "rejected",
   evidence: String(assignment.evidence ?? ""),
   reviewNote: String(assignment.reviewNote ?? ""),
-  assignedAt: assignment.assignedAt instanceof Date ? assignment.assignedAt.toISOString() : new Date(assignment.assignedAt || Date.now()).toISOString(),
-  submittedAt: assignment.submittedAt ? (assignment.submittedAt instanceof Date ? assignment.submittedAt.toISOString() : new Date(assignment.submittedAt).toISOString()) : null,
-  reviewedAt: assignment.reviewedAt ? (assignment.reviewedAt instanceof Date ? assignment.reviewedAt.toISOString() : new Date(assignment.reviewedAt).toISOString()) : null,
+  assignedAt: safeIso(assignment.assignedAt),
+  submittedAt: safeIsoOrNull(assignment.submittedAt),
+  reviewedAt: safeIsoOrNull(assignment.reviewedAt),
 });
 
 router.get("/tasks", requireMember, async (req, res): Promise<void> => {
@@ -83,8 +78,8 @@ router.get("/tasks", requireMember, async (req, res): Promise<void> => {
     return {eligible: true, message: "", cycleStartAt, nextCycleAt, tasks: assignments};
   });
   res.json(V.GetTaskBoardResponse.parse({
-    ...board, cycleStartAt: board.cycleStartAt?.toISOString() ?? null,
-    nextCycleAt: board.nextCycleAt?.toISOString() ?? null, tasks: board.tasks.map(assignmentView),
+    ...board, cycleStartAt: safeIsoOrNull(board.cycleStartAt),
+    nextCycleAt: safeIsoOrNull(board.nextCycleAt), tasks: board.tasks.map(assignmentView),
   }));
 });
 

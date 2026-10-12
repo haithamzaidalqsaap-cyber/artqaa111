@@ -7,7 +7,7 @@ import {
 import { Skel, ErrorBox } from "@/components/brand";
 import { StatusPill } from "@/pages/member";
 import { useToast } from "@/hooks/use-toast";
-import { apiError, usdt, dateAr, isTx } from "@/lib/helpers";
+import { apiError, usdt, dateAr } from "@/lib/helpers";
 import { useInvalidateAll, live } from "@/lib/invalidate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -60,15 +60,18 @@ export function DepositsReview({ enabled }: { enabled: boolean }) {
                   <p className="text-xs text-muted-foreground mt-1.5">{d.planName} · {d.channel} · {dateAr(d.createdAt, true)}</p>
                 </div>
                 <div className="flex items-center gap-3"><span className="num font-display text-lg">{usdt(d.amount)}</span><StatusPill status={d.status} /></div>
-              </div>
-              <div className="mt-3 grid gap-1.5 text-xs text-muted-foreground">
-                <p>المستلم: <a href={`https://polygonscan.com/address/${encodeURIComponent(d.address)}#tokentxns`} target="_blank" rel="noreferrer" className="num break-all text-primary">{d.address}<ExternalLink className="mr-1 inline h-3 w-3" /></a></p>
                 <p>ربح يومي في اللقطة: <span className="num">{usdt(d.dailyProfit)}</span></p>
-                {d.receiptUrl && <a href={d.receiptUrl} target="_blank" rel="noreferrer" data-testid={`link-admin-receipt-${d.id}`} className="inline-flex items-center gap-1 text-primary"><ImageIcon className="h-3 w-3" />عرض الإيصال</a>}
+                {d.receiptUrl && (
+                  <div className="mt-3">
+                    <a href={d.receiptUrl} target="_blank" rel="noreferrer" data-testid={`link-admin-receipt-${d.id}`} className="inline-block">
+                      <img src={d.receiptUrl} alt="Receipt" className="max-h-40 rounded-xl border border-border shadow-sm hover:opacity-90 transition-opacity" />
+                    </a>
+                  </div>
+                )}
                 {d.reviewNote && <p>ملاحظة: {d.reviewNote}</p>}
               </div>
               {d.status === "pending" && <button data-testid={`button-review-deposit-${d.id}`} onClick={() => setTarget(d)} className="btn-gold mt-4 px-4 py-2 text-xs">مراجعة</button>}
-            </div>
+              </div>
           ))}
         </div>
       )}
@@ -87,9 +90,12 @@ function DepositDialog({ d, onClose }: { d: Deposit | null; onClose: () => void 
   const m = useReviewDeposit({
     mutation: {
       onSuccess: (r) => {
+        const isRecharge = d?.planId === "recharge" || d?.planName?.includes("شحن رصيد");
         toast({
-          title: r.status === "approved" ? "تم اعتماد الإيداع بنجاح" : "تم رفض طلب الإيداع",
-          description: r.status === "approved" ? "تم تفعيل باقة العضوية بنجاح وبدأ احتساب العوائد اليومية للعضو." : "تم تسجيل رفض الطلب وتدوين الملاحظة بنجاح.",
+          title: r.status === "approved" ? (isRecharge ? "تم اعتماد شحن الرصيد بنجاح" : "تم اعتماد الإيداع بنجاح") : "تم رفض طلب الإيداع",
+          description: r.status === "approved"
+            ? (isRecharge ? `تمت إضافة ${usdt(d?.amount)} مباشرة إلى رصيد محفظة العضو بنجاح.` : "تم اعتماد الإيداع وتفعيل باقة العضوية بنجاح وبدأ احتساب العوائد اليومية.")
+            : "تم تسجيل رفض الطلب وتدوين الملاحظة بنجاح.",
           variant: r.status === "approved" ? "default" : "destructive",
         });
         inv();
@@ -112,9 +118,10 @@ function DepositDialog({ d, onClose }: { d: Deposit | null; onClose: () => void 
         {d && (
           <div className="space-y-4 text-sm">
             <dl className="grid gap-2 rounded-2xl border border-border p-4 text-xs">
+              <div className="flex justify-between gap-3"><dt className="text-muted-foreground">نوع الطلب</dt><dd className="font-semibold text-primary">{d.planName || "شحن رصيد المحفظة"}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted-foreground">رقم العضوية</dt><dd className="num font-medium text-primary">{d.memberId}</dd></div>
               {d.memberPhone && <div className="flex justify-between gap-3"><dt className="text-muted-foreground">رقم الهاتف</dt><dd className="num">{d.memberPhone}</dd></div>}
-              <div className="flex justify-between gap-3"><dt className="text-muted-foreground">المبلغ المطلوب</dt><dd className="num">{usdt(d.amount)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted-foreground">المبلغ المطلوب</dt><dd className="num font-bold text-accent">{usdt(d.amount)}</dd></div>
               <div><dt className="text-muted-foreground">المستلم</dt><dd><a href={`https://polygonscan.com/address/${encodeURIComponent(d.address)}#tokentxns`} target="_blank" rel="noreferrer" className="num break-all text-primary">{d.address}<ExternalLink className="mr-1 inline h-3 w-3" /></a></dd></div>
             </dl>
             {d.receiptUrl && <a href={d.receiptUrl} target="_blank" rel="noreferrer"><img src={d.receiptUrl} alt="الإيصال" className="max-h-64 w-full rounded-2xl border border-border object-contain" /></a>}
@@ -126,7 +133,9 @@ function DepositDialog({ d, onClose }: { d: Deposit | null; onClose: () => void 
             <textarea data-testid="input-deposit-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={3} placeholder="ملاحظة (إلزامية عند الرفض)" className="field resize-none" />
             {err && <p className="text-sm text-[hsl(4_80%_76%)]">{err}</p>}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <button data-testid="button-approve-deposit" disabled={m.isPending || !confirmed} onClick={() => act("approved")} className="btn-gold py-3">{m.isPending ? "..." : d.planId === "starter" ? "اعتماد وتفعيل 180 يومًا" : "اعتماد وتفعيل 365 يومًا"}</button>
+              <button data-testid="button-approve-deposit" disabled={m.isPending || !confirmed} onClick={() => act("approved")} className="btn-gold py-3">
+                {m.isPending ? "..." : (d.planId === "recharge" || d.planName?.includes("شحن رصيد")) ? `اعتماد شحن الرصيد (${usdt(d.amount)})` : d.planId === "starter" ? "اعتماد وتفعيل 180 يومًا" : "اعتماد وتفعيل 365 يومًا"}
+              </button>
               <button data-testid="button-reject-deposit" disabled={m.isPending} onClick={() => act("rejected")} className="btn-ghost py-3 text-[hsl(4_80%_76%)]">رفض</button>
             </div>
           </div>
@@ -186,7 +195,6 @@ export function WithdrawalsReview({ enabled }: { enabled: boolean }) {
               </div>
               <div className="mt-3 grid gap-1.5 text-xs text-muted-foreground">
                 <p>إلى (Polygon): <span className="num break-all text-foreground">{w.address}</span></p>
-                {w.txHash && <p>المعاملة: {txLink(w.txHash, w.id)}</p>}
                 {w.reviewNote && <p>ملاحظة: {w.reviewNote}</p>}
               </div>
               {w.status === "pending" && (
@@ -209,10 +217,9 @@ function WithdrawalDialog({ w, onClose }: { w: Withdrawal | null; onClose: () =>
   const { toast } = useToast();
   const inv = useInvalidateAll();
   const [note, setNote] = useState("");
-  const [tx, setTx] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [err, setErr] = useState("");
-  const close = () => { setNote(""); setTx(""); setConfirmed(false); setErr(""); onClose(); };
+  const close = () => { setNote(""); setConfirmed(false); setErr(""); onClose(); };
   const labels: Record<string, string> = { paid: "سُجّل السحب كمدفوع", rejected: "رُفض السحب وأُعيد المبلغ للرصيد" };
   const m = useReviewWithdrawal({
     mutation: {
@@ -224,11 +231,10 @@ function WithdrawalDialog({ w, onClose }: { w: Withdrawal | null; onClose: () =>
     setErr("");
     if (!w || m.isPending) return;
     if (decision === "paid") {
-      if (!isTx(tx.trim())) return setErr("أدخل رمز معاملة صالحًا (0x + 64 خانة)");
       if (!confirmed) return setErr("أكّد أنك نفّذت التحويل خارجيًا أولًا");
     }
     if (decision === "rejected" && note.trim().length < 3) return setErr("اكتب سبب الرفض (3 أحرف على الأقل)");
-    m.mutate({ id: w.id, data: { decision, txHash: decision === "paid" ? tx.trim() : "", note: note.trim(), confirmed: decision === "paid" ? confirmed : false } });
+    m.mutate({ id: w.id, data: { decision, txHash: "", note: note.trim(), confirmed: decision === "paid" ? confirmed : false } });
   };
   return (
     <Dialog open={!!w} onOpenChange={(o) => !o && close()}>
@@ -247,8 +253,7 @@ function WithdrawalDialog({ w, onClose }: { w: Withdrawal | null; onClose: () =>
             </dl>
             {w.status === "processing" && (
               <div className="space-y-3 rounded-2xl border border-[hsl(40_62%_68%/.3)] p-4">
-                <p className="text-xs text-muted-foreground">نفّذ تحويل USDT على Polygon يدويًا من محفظتك أولًا، ثم سجّل رمز المعاملة هنا.</p>
-                <input data-testid="input-withdrawal-tx" value={tx} onChange={(e) => setTx(e.target.value)} maxLength={66} placeholder="0x... (64 خانة)" dir="ltr" className="field num text-left text-xs" />
+                <p className="text-xs text-muted-foreground">نفّذ تحويل USDT على Polygon يدويًا من محفظتك أولًا، ثم أكّد أدناه.</p>
                 <label className="flex items-start gap-3 text-xs cursor-pointer">
                   <input data-testid="checkbox-withdrawal-confirm" type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[hsl(40_62%_68%)]" />
                   نفّذت التحويل خارجيًا إلى العنوان أعلاه بالمبلغ نفسه، والمعاملة مؤكدة على الشبكة.

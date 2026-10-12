@@ -4,7 +4,7 @@ import * as V from "@workspace/api-zod";
 import { prisma } from "../lib/prisma";
 import { HttpError, input } from "../lib/http";
 import { endSession, hashPassword, normalizePhone, rateLimit, startSession, verifyPassword } from "../lib/auth";
-import { userView } from "../lib/platform";
+import { userView, safeIso } from "../lib/platform";
 import { collections } from "../lib/firebase";
 
 const router: IRouter = Router();
@@ -106,7 +106,7 @@ router.post("/auth/register", rateLimit, async (req, res): Promise<void> => {
         memberId: created.memberId,
         role: created.role,
         honorPoints: created.honorPoints,
-        createdAt: created.createdAt.toISOString(),
+        createdAt: safeIso(created.createdAt),
       }).catch(() => {});
     }
 

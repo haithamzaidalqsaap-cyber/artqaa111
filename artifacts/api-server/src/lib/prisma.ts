@@ -8,6 +8,35 @@ const STORE_PATH = isServerless
   ? resolve("/tmp", "store.json")
   : resolve(process.cwd(), "data/store.json");
 
+export function parseSafeDate(v: any, fallback = new Date()): Date {
+  if (v instanceof Date && !isNaN(v.getTime())) return v;
+  if (v && typeof v.toDate === "function") {
+    try {
+      const d = v.toDate();
+      if (d instanceof Date && !isNaN(d.getTime())) return d;
+    } catch {}
+  }
+  if (v && typeof v === "object") {
+    if (typeof v._seconds === "number") {
+      const d = new Date(v._seconds * 1000 + (v._nanoseconds ? Math.round(v._nanoseconds / 1e6) : 0));
+      if (!isNaN(d.getTime())) return d;
+    }
+    if (typeof v.seconds === "number") {
+      const d = new Date(v.seconds * 1000 + (v.nanoseconds ? Math.round(v.nanoseconds / 1e6) : 0));
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+  if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+    const d = new Date(v);
+    if (!isNaN(d.getTime())) return d;
+  }
+  if (typeof v === "string" && v.trim().length > 0) {
+    const d = new Date(v);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return fallback;
+}
+
 // Persistent local + Firestore data store
 class DataStore {
   members = new Map<string, any>();
@@ -145,13 +174,14 @@ class DataStore {
           if (data.members) {
             for (const [k, v] of Object.entries(data.members)) {
               const m: any = { ...(v as any) };
-            const digits = String(m.phone || "").replace(/[^0-9]/g, "");
-            if (digits.length >= 5) {
-              m.memberId = digits.slice(-5);
+              const digits = String(m.phone || "").replace(/[^0-9]/g, "");
+              if (digits.length >= 5) {
+                m.memberId = digits.slice(-5);
+              }
+              m.createdAt = parseSafeDate(m.createdAt);
+              this.members.set(k, m);
             }
-            this.members.set(k, m);
           }
-        }
         if (data.sessions) for (const [k, v] of Object.entries(data.sessions)) this.sessions.set(k, v);
         if (data.plans) for (const [k, v] of Object.entries(data.plans)) this.plans.set(k, v);
         if (data.subscriptions) for (const [k, v] of Object.entries(data.subscriptions)) this.subscriptions.set(k, v);
@@ -263,7 +293,7 @@ class DataStore {
               realBalanceCents,
               realEarnedCents,
               active: d.active !== false,
-              createdAt: d.createdAt ? new Date(d.createdAt) : new Date(),
+              createdAt: parseSafeDate(d.createdAt),
             });
           });
         }
@@ -277,8 +307,8 @@ class DataStore {
               id: doc.id,
               tokenHash: d.tokenHash || doc.id,
               memberId: d.memberId,
-              expiresAt: d.expiresAt ? new Date(d.expiresAt) : new Date(Date.now() + 7 * 86400000),
-              createdAt: d.createdAt ? new Date(d.createdAt) : new Date(),
+              expiresAt: parseSafeDate(d.expiresAt, new Date(Date.now() + 7 * 86400000)),
+              createdAt: parseSafeDate(d.createdAt),
             });
           });
         }
@@ -395,7 +425,7 @@ function createModelHandler(map: Map<string, any>, firestoreCollectionName?: str
           const serialized: any = {};
           for (const [k, v] of Object.entries(record)) {
             if (v instanceof Date) {
-              serialized[k] = v.toISOString();
+              serialized[k] = !isNaN(v.getTime()) ? v.toISOString() : new Date().toISOString();
             } else if (v !== undefined) {
               serialized[k] = v;
             }
@@ -444,7 +474,7 @@ function createModelHandler(map: Map<string, any>, firestoreCollectionName?: str
           const serialized: any = {};
           for (const [k, v] of Object.entries(updated)) {
             if (v instanceof Date) {
-              serialized[k] = v.toISOString();
+              serialized[k] = !isNaN(v.getTime()) ? v.toISOString() : new Date().toISOString();
             } else if (v !== undefined) {
               serialized[k] = v;
             }
@@ -475,6 +505,40 @@ function createModelHandler(map: Map<string, any>, firestoreCollectionName?: str
           count++;
           if (firestoreCollectionName && (collections as any)[firestoreCollectionName]) {
             try { await (collections as any)[firestoreCollectionName].doc(k).delete().catch(() => {}); } catch {}
+          }
+        }
+      }
+      if (count > 0) store.scheduleSave();
+      return { count };
+    },
+    updateMany: async ({ where, data }: { where?: any; data: any } = {}) => {
+      let count = 0;
+      for (const [k, item] of Array.from(map.entries())) {
+        if (matchesFilter(item, where)) {
+          const updated = { ...item };
+          for (const [prop, v] of Object.entries(data)) {
+            if (v !== null && typeof v === "object" && "increment" in (v as any)) {
+              updated[prop] = (Number(updated[prop]) || 0) + (v as any).increment;
+            } else if (v !== null && typeof v === "object" && "decrement" in (v as any)) {
+              updated[prop] = (Number(updated[prop]) || 0) - (v as any).decrement;
+            } else {
+              updated[prop] = v;
+            }
+          }
+          map.set(k, updated);
+          count++;
+          if (firestoreCollectionName && (collections as any)[firestoreCollectionName]) {
+            try {
+              const serialized: any = {};
+              for (const [prop, v] of Object.entries(updated)) {
+                if (v instanceof Date) {
+                  serialized[prop] = !isNaN(v.getTime()) ? v.toISOString() : new Date().toISOString();
+                } else if (v !== undefined) {
+                  serialized[prop] = v;
+                }
+              }
+              await (collections as any)[firestoreCollectionName].doc(k).set(serialized, { merge: true }).catch(() => {});
+            } catch {}
           }
         }
       }

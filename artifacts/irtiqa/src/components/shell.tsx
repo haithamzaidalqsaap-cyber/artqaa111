@@ -41,7 +41,8 @@ function Nav({ user }: { user: User | null }) {
 
   const memberNav = [
     { href: "/dashboard", label: t("nav.dashboard", "لوحتي"), icon: LayoutDashboard },
-    { href: "/deposits", label: t("nav.deposits", "الإيداع"), icon: ArrowDownToLine },
+    { href: "/plans", label: t("nav.plans", "الباقات"), icon: Gem },
+    { href: "/deposits", label: t("nav.deposits", "شحن الرصيد"), icon: ArrowDownToLine },
     { href: "/wallet", label: t("nav.wallet", "المحفظة"), icon: Wallet },
     { href: "/team", label: t("nav.team", "فريقي"), icon: Users },
     { href: "/profile", label: t("nav.profile", "الملف"), icon: UserRound },
@@ -134,7 +135,7 @@ function Nav({ user }: { user: User | null }) {
                 }`}
               >
                 <i.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                <span className="truncate max-w-full text-center leading-tight">{i.label}</span>
+                <span className="text-center leading-[1.1] max-w-full text-[9px] sm:text-[11px] font-medium break-words sm:break-normal px-0.5">{i.label}</span>
               </Link>
             );
           })}

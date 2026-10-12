@@ -12,20 +12,66 @@ export const planDurationDays = (planId: string) => planId === FREE_PLAN_ID ? FR
 export const MIN_WITHDRAWAL_CENTS = 200;
 
 export const safeIso = (v: any): string => {
-  if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
-  if (v) {
-    const d = new Date(v);
-    if (!isNaN(d.getTime())) return d.toISOString();
-  }
+  try {
+    if (v instanceof Date) {
+      if (!isNaN(v.getTime())) return v.toISOString();
+    }
+    if (v && typeof v.toDate === "function") {
+      const d = v.toDate();
+      if (d instanceof Date && !isNaN(d.getTime())) return d.toISOString();
+    }
+    if (v && typeof v === "object") {
+      if (typeof v._seconds === "number") {
+        const d = new Date(v._seconds * 1000 + (v._nanoseconds ? Math.round(v._nanoseconds / 1e6) : 0));
+        if (!isNaN(d.getTime())) return d.toISOString();
+      }
+      if (typeof v.seconds === "number") {
+        const d = new Date(v.seconds * 1000 + (v.nanoseconds ? Math.round(v.nanoseconds / 1e6) : 0));
+        if (!isNaN(d.getTime())) return d.toISOString();
+      }
+    }
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    }
+    if (typeof v === "string" && v.trim().length > 0) {
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    }
+  } catch {}
   return new Date().toISOString();
 };
 
 export const safeIsoOrNull = (v: any): string | null => {
-  if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
-  if (v) {
-    const d = new Date(v);
-    if (!isNaN(d.getTime())) return d.toISOString();
-  }
+  try {
+    if (!v) return null;
+    if (v instanceof Date) {
+      if (!isNaN(v.getTime())) return v.toISOString();
+      return null;
+    }
+    if (typeof v.toDate === "function") {
+      const d = v.toDate();
+      if (d instanceof Date && !isNaN(d.getTime())) return d.toISOString();
+    }
+    if (typeof v === "object") {
+      if (typeof v._seconds === "number") {
+        const d = new Date(v._seconds * 1000 + (v._nanoseconds ? Math.round(v._nanoseconds / 1e6) : 0));
+        if (!isNaN(d.getTime())) return d.toISOString();
+      }
+      if (typeof v.seconds === "number") {
+        const d = new Date(v.seconds * 1000 + (v.nanoseconds ? Math.round(v.nanoseconds / 1e6) : 0));
+        if (!isNaN(d.getTime())) return d.toISOString();
+      }
+    }
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    }
+    if (typeof v === "string" && v.trim().length > 0) {
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    }
+  } catch {}
   return null;
 };
 

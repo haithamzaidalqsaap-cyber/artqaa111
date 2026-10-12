@@ -3,7 +3,7 @@ import * as V from "@workspace/api-zod";
 import { prisma } from "../lib/prisma";
 import { requireMember } from "../lib/auth";
 import { HttpError, input } from "../lib/http";
-import { FREE_PLAN_ID, FREE_PLAN_VERIFICATION_DEPOSIT_CENTS, lockMember, validAddress } from "../lib/platform";
+import { FREE_PLAN_ID, FREE_PLAN_VERIFICATION_DEPOSIT_CENTS, lockMember, validAddress, cents, safeIso } from "../lib/platform";
 import { depositView } from "../lib/finance";
 import { freezeReceipt } from "../lib/receipts";
 import { collections } from "../lib/firebase";
@@ -18,7 +18,7 @@ router.get("/deposits", requireMember, async (req, res) => {
 
 router.post("/deposits", requireMember, async (req, res) => {
   const data = input(V.CreateDepositBody, req.body);
-  if (data.acceptedTerms !== true) throw new HttpError(400, "يجب الاطلاع على شروط الباقة والموافقة عليها.");
+  if (data.acceptedTerms !== true) throw new HttpError(400, "يجب الاطلاع على الشروط والموافقة عليها.");
   const deposit = await prisma.$transaction(async (tx: any) => {
     await lockMember(tx, req.member!.id);
     const settings = await tx.setting.findUnique({where: {id: "main"}});
@@ -26,57 +26,98 @@ router.post("/deposits", requireMember, async (req, res) => {
     if (!settings?.depositsEnabled || !address || !validAddress(address) || !settings.terms.trim() || !settings.fundingDescription.trim()) {
       throw new HttpError(403, "الإيداعات غير متاحة حتى تُكمل الإدارة إعداد العناوين والشروط.");
     }
-    const plan = await tx.plan.findUnique({where: {id: data.planId}});
-    const isFreeVerification = plan?.id === FREE_PLAN_ID;
-    if (!plan?.active || !plan.configured) throw new HttpError(400, "الباقة غير مهيأة للاشتراك.");
 
-    // Retrieve active and past subscriptions and approved deposits for this member
-    const memberSubs = await tx.subscription.findMany({
-      where: { memberId: req.member!.id },
-      orderBy: { annualPriceCents: "desc" }
+    // Automatically cancel any awaiting_receipt deposits so users never get blocked by unfinished orders
+    await tx.deposit.updateMany({
+      where: { memberId: req.member!.id, status: "awaiting_receipt" },
+      data: { status: "cancelled" }
     });
-    const approvedDeposits = await tx.deposit.findMany({
-      where: { memberId: req.member!.id, status: "approved" }
+    // Also close legacy orphan records that were saved without a status.
+    const legacy = await tx.deposit.findMany({ where: { memberId: req.member!.id } });
+    for (const old of legacy) {
+      if (!old.status) await tx.deposit.update({ where: { id: old.id }, data: { status: "cancelled" } });
+    }
+
+    const existingPending = await tx.deposit.findFirst({
+      where: { memberId: req.member!.id, status: "pending" },
+      orderBy: { createdAt: "desc" }
     });
-
-    const activeSub = memberSubs.find((s: any) => new Date(s.expiresAt).getTime() > Date.now());
-
-    // User can subscribe to a plan only ONCE
-    const hasUsedPlanBefore = memberSubs.some((s: any) => s.planId === plan.id) || approvedDeposits.some((d: any) => d.planId === plan.id);
-    if (hasUsedPlanBefore) {
-      throw new HttpError(400, "أنت مشترك أو اشتركت سابقاً في هذه الباقة. يسمح بالاشتراك في كل باقة مرة واحدة فقط، ويمكنك الترقية لباقة أعلى ودفع الفارق.");
+    if (existingPending) {
+      throw new HttpError(409, "لديك طلب إيداع قيد المراجعة بالفعل. يرجى انتظار اعتماده أو إلغاؤه من القائمة.");
     }
 
-    const activeSubPlan = activeSub?.planId ? await tx.plan.findUnique({where: {id: activeSub.planId}}) : null;
-    const currentPriceCents = activeSubPlan ? activeSubPlan.annualPriceCents : (activeSub ? (Number(activeSub.annualPriceCents) > 0 ? Number(activeSub.annualPriceCents) : (activeSub.planId === FREE_PLAN_ID ? FREE_PLAN_VERIFICATION_DEPOSIT_CENTS : 0)) : 0);
-    const targetPriceCents = isFreeVerification ? FREE_PLAN_VERIFICATION_DEPOSIT_CENTS : Number(plan.annualPriceCents);
+    let planId = typeof data.planId === "string" ? data.planId.trim() : "";
+    let amountCents = 0;
+    let planName = "شحن رصيد المحفظة";
+    let planDescription = "إيداع USDT على شبكة Polygon لشحن رصيد الحساب المتاح للاشتراك في الباقات وسحب الأرباح.";
+    let dailyProfitCents = 0;
 
-    if (activeSub && targetPriceCents <= currentPriceCents) {
-      throw new HttpError(400, "يمكنك الترقية فقط إلى باقة أعلى ودفع فارق السعر بينهما.");
+    const requestedAmount = Number(data.amount);
+
+    if (planId && planId !== "recharge") {
+      const plan = await tx.plan.findUnique({where: {id: planId}});
+      if (plan && plan.active && plan.configured) {
+        planName = plan.name;
+        planDescription = plan.description;
+        dailyProfitCents = plan.dailyProfitCents;
+
+        const isFreeVerification = plan.id === FREE_PLAN_ID;
+        const targetPriceCents = isFreeVerification ? FREE_PLAN_VERIFICATION_DEPOSIT_CENTS : Number(plan.annualPriceCents);
+
+        const memberSubs = await tx.subscription.findMany({
+          where: { memberId: req.member!.id },
+          orderBy: { annualPriceCents: "desc" }
+        });
+        const approvedDeposits = await tx.deposit.findMany({
+          where: { memberId: req.member!.id, status: "approved" }
+        });
+
+        const activeSub = memberSubs.find((s: any) => new Date(s.expiresAt).getTime() > Date.now());
+        const hasUsedPlanBefore = memberSubs.some((s: any) => s.planId === plan.id) || approvedDeposits.some((d: any) => d.planId === plan.id);
+        if (hasUsedPlanBefore) {
+          throw new HttpError(400, "أنت مشترك أو اشتركت سابقاً في هذه الباقة. يسمح بالاشتراك في كل باقة مرة واحدة فقط، ويمكنك الترقية لباقة أعلى ودفع الفارق.");
+        }
+
+        const activeSubPlan = activeSub?.planId ? await tx.plan.findUnique({where: {id: activeSub.planId}}) : null;
+        const currentPriceCents = activeSubPlan ? activeSubPlan.annualPriceCents : (activeSub ? (Number(activeSub.annualPriceCents) > 0 ? Number(activeSub.annualPriceCents) : (activeSub.planId === FREE_PLAN_ID ? FREE_PLAN_VERIFICATION_DEPOSIT_CENTS : 0)) : 0);
+
+        if (activeSub && targetPriceCents <= currentPriceCents) {
+          throw new HttpError(400, "يمكنك الترقية فقط إلى باقة أعلى ودفع فارق السعر بينهما.");
+        }
+
+        amountCents = targetPriceCents;
+        if (activeSub && targetPriceCents > currentPriceCents) {
+          amountCents = Math.max(0, targetPriceCents - currentPriceCents);
+        }
+      } else {
+        planId = "recharge";
+      }
+    } else {
+      planId = "recharge";
     }
 
-    if (await tx.deposit.findFirst({where: {memberId: req.member!.id, status: {in: ["awaiting_receipt", "pending"]}}})) {
-      throw new HttpError(409, "لديك طلب إيداع مفتوح بالفعل، يرجى إكماله أو إلغاؤه أولاً.");
-    }
-
-    // Calculate upgrade price difference if upgrading from an active subscription
-    let amountCents = targetPriceCents;
-    if (activeSub && targetPriceCents > currentPriceCents) {
-      amountCents = Math.max(0, targetPriceCents - currentPriceCents);
+    if (planId === "recharge") {
+      if (!Number.isFinite(requestedAmount) || requestedAmount < 1) {
+        throw new HttpError(400, "الحد الأدنى لمبلغ شحن الرصيد هو 1 USDT.");
+      }
+      amountCents = cents(requestedAmount);
     }
 
     return tx.deposit.create({
       data: {
         memberId: req.member!.id,
-        planId: plan.id,
-        planName: plan.name,
-        planDescription: plan.description,
+        planId,
+        planName,
+        planDescription,
         amountCents,
-        dailyProfitCents: plan.dailyProfitCents,
+        dailyProfitCents,
         channel: data.channel,
         address,
         terms: settings.terms,
-        fundingDescription: settings.fundingDescription
+        fundingDescription: settings.fundingDescription,
+        // The in-memory store does not apply Prisma schema defaults, so set them explicitly.
+        status: "awaiting_receipt",
+        reviewNote: ""
       },
       include: {member: true}
     });
@@ -85,7 +126,7 @@ router.post("/deposits", requireMember, async (req, res) => {
   if (collections.deposits) {
     await collections.deposits.doc(deposit.id).set({
       ...depositView(deposit),
-      createdAt: deposit.createdAt.toISOString()
+      createdAt: safeIso(deposit.createdAt)
     }).catch(() => {});
   }
 
@@ -95,13 +136,15 @@ router.post("/deposits", requireMember, async (req, res) => {
 router.post("/deposits/:id/proof", requireMember, async (req, res) => {
   const {id} = input(V.SubmitDepositProofParams, req.params);
   const data = input(V.SubmitDepositProofBody, req.body);
-  const original = await prisma.deposit.findFirst({where: {id, memberId: req.member!.id, status: "awaiting_receipt"}});
-  if (!original) throw new HttpError(409, "الطلب غير متاح لإرسال وصل.");
+  const original = await prisma.deposit.findFirst({where: {id, memberId: req.member!.id}});
+  if (!original) throw new HttpError(404, "طلب الإيداع غير موجود.");
+  // Records created before the fix may have no status at all; treat them as awaiting a receipt.
+  if (original.status && original.status !== "awaiting_receipt") throw new HttpError(409, "تم إرسال الوصل أو إغلاق الطلب بالفعل.");
   const finalPath = await freezeReceipt(data.uploadId, req.member!.id);
   const deposit = await prisma.$transaction(async (tx: any) => {
     await lockMember(tx, req.member!.id);
     const current = await tx.deposit.findFirst({where: {id, memberId: req.member!.id}});
-    if (current?.status !== "awaiting_receipt") throw new HttpError(409, "تم إرسال الوصل أو إغلاق الطلب بالفعل.");
+    if (!current || (current.status && current.status !== "awaiting_receipt")) throw new HttpError(409, "تم إرسال الوصل أو إغلاق الطلب بالفعل.");
     const upload = await tx.receiptUpload.findUnique({where: {id: data.uploadId}});
     if (!upload || upload.memberId !== req.member!.id || upload.used) throw new HttpError(409, "صورة الوصل مستخدمة بالفعل.");
     await tx.receiptUpload.update({where: {id: upload.id}, data: {used: true, finalPath}});
@@ -113,7 +156,7 @@ router.post("/deposits/:id/proof", requireMember, async (req, res) => {
   if (collections.deposits) {
     await collections.deposits.doc(deposit.id).set({
       ...depositView(deposit),
-      createdAt: deposit.createdAt.toISOString()
+      createdAt: safeIso(deposit.createdAt)
     }).catch(() => {});
   }
 

@@ -37,51 +37,74 @@ router.post("/admin/deposits/:id/review", async (req, res) => {
         await tx.member.update({where: {id: d.memberId}, data: {active: true}});
       }
 
-      const now = new Date();
-      const durationDays = planDurationDays(d.planId);
+      if (d.planId === "recharge" || d.planName.includes("شحن رصيد")) {
+        // Balance recharge: credited directly to user's realBalanceCents!
+        await tx.member.update({
+          where: { id: d.memberId },
+          data: {
+            realBalanceCents: { increment: d.amountCents },
+            honorPoints: 100,
+            active: true
+          }
+        });
+        await tx.activity.create({
+          data: {
+            memberId: d.memberId,
+            mode: "live",
+            kind: "deposit",
+            title: `تم اعتماد شحن رصيدك بنجاح: ${money(d.amountCents)} USDT أُضيفت إلى رصيدك المتاح`,
+            amountCents: d.amountCents,
+          },
+        }).catch(() => {});
+      } else {
+        const now = new Date();
+        const durationDays = planDurationDays(d.planId);
 
-      // Replace/close existing subscriptions
-      const existingSubs = await tx.subscription.findMany({where: {memberId: d.memberId, mode: "live"}});
-      for (const sub of existingSubs) {
-        await tx.subscription.update({where: {id: sub.id}, data: {expiresAt: now}}).catch(() => {});
+        // Replace/close existing subscriptions
+        const existingSubs = await tx.subscription.findMany({where: {memberId: d.memberId, mode: "live"}});
+        for (const sub of existingSubs) {
+          await tx.subscription.update({where: {id: sub.id}, data: {expiresAt: now}}).catch(() => {});
+        }
+
+        const targetPlan = await tx.plan.findUnique({where: {id: d.planId}});
+        const fullAnnualPriceCents = targetPlan ? targetPlan.annualPriceCents : (d.planId === FREE_PLAN_ID ? 0 : d.amountCents);
+
+        await tx.subscription.create({
+          data: {
+            memberId: d.memberId,
+            planId: d.planId,
+            planName: d.planName,
+            planDescription: d.planDescription || "",
+            annualPriceCents: fullAnnualPriceCents,
+            dailyTasks: 0,
+            taskRewardCents: 0,
+            dailyProfitCents: d.dailyProfitCents,
+            startsAt: now,
+            expiresAt: new Date(now.getTime() + DAY * durationDays),
+            lastCreditedDay: -1,
+            mode: "live",
+          },
+        });
+
+        await tx.member.update({where: {id: d.memberId}, data: {honorPoints: 100, active: true}});
+        await accrue(tx, d.memberId, now).catch(() => {});
+        await tx.activity.create({
+          data: {
+            memberId: d.memberId,
+            mode: "live",
+            kind: "deposit",
+            title: `تم اعتماد الإيداع وتفعيل باقة ${d.planName} بقيمة ${money(d.amountCents)} USDT لمدة ${durationDays} يوماً`,
+            amountCents: d.amountCents,
+          },
+        }).catch(() => {});
       }
 
-      const targetPlan = await tx.plan.findUnique({where: {id: d.planId}});
-      const fullAnnualPriceCents = targetPlan ? targetPlan.annualPriceCents : (d.planId === FREE_PLAN_ID ? 0 : d.amountCents);
-
-      await tx.subscription.create({
-        data: {
-          memberId: d.memberId,
-          planId: d.planId,
-          planName: d.planName,
-          planDescription: d.planDescription || "",
-          annualPriceCents: fullAnnualPriceCents,
-          dailyTasks: 0,
-          taskRewardCents: 0,
-          dailyProfitCents: d.dailyProfitCents,
-          startsAt: now,
-          expiresAt: new Date(now.getTime() + DAY * durationDays),
-          lastCreditedDay: -1,
-          mode: "live",
-        },
-      });
-
-      await tx.member.update({where: {id: d.memberId}, data: {honorPoints: 100, active: true}});
-      await accrue(tx, d.memberId, now).catch(() => {});
-      await tx.activity.create({
-        data: {
-          memberId: d.memberId,
-          mode: "live",
-          kind: "deposit",
-          title: `تم اعتماد الإيداع وتفعيل باقة ${d.planName} بقيمة ${money(d.amountCents)} USDT لمدة ${durationDays} يوماً`,
-          amountCents: d.amountCents,
-        },
-      }).catch(() => {});
-
       // Multi-tier referral commission distribution (L1 = 8%, L2 = 3%, L3 = 1%)
-      try {
-        const depositor = await tx.member.findUnique({where: {id: d.memberId}});
-        if (depositor?.inviterId && d.amountCents > 0) {
+      // Only for direct legacy plan deposits. For balance recharge deposits, referral commissions are distributed upon plan activation in /subscriptions
+      if (d.planId !== "recharge" && !d.planName?.includes("شحن رصيد")) {
+        try {
+          const depositor = await tx.member.findUnique({where: {id: d.memberId}});
+          if (depositor?.inviterId && d.amountCents > 0) {
           // Level 1 Inviter (8%)
           const l1 = await tx.member.findUnique({where: {id: depositor.inviterId}});
           if (l1) {
@@ -143,7 +166,8 @@ router.post("/admin/deposits/:id/review", async (req, res) => {
       } catch (err) {
         console.error("Multi-tier commission distribution error:", err);
       }
-    } else {
+    }
+  } else {
       await tx.activity.create({
         data: {
           memberId: d.memberId,
@@ -192,17 +216,19 @@ router.post("/admin/withdrawals/:id/review", async (req, res) => {
   const {id} = input(V.ReviewWithdrawalParams, req.params);
   const data = input(V.ReviewWithdrawalBody, req.body);
   const hash = data.txHash.trim().toLowerCase();
-  if (data.decision === "paid" && (!data.confirmed || !validHash(hash))) throw new HttpError(400, "حوّل المبلغ فعلياً ثم أكد العملية وأدخل معرّف التحويل على Polygon.");
+  // The transaction hash is optional now; only an explicit confirmation is required.
+  const hasHash = validHash(hash);
+  if (data.decision === "paid" && !data.confirmed) throw new HttpError(400, "حوّل المبلغ فعلياً ثم أكّد العملية.");
   if (data.decision === "rejected" && data.note.trim().length < 3) throw new HttpError(400, "اذكر سبب رفض السحب.");
 
   const withdrawal = await prisma.$transaction(async (tx: any) => {
     const w = await tx.withdrawal.findUniqueOrThrow({where: {id}});
     if (data.decision === "rejected") {
       await tx.member.update({where: {id: w.memberId}, data: {realBalanceCents: {increment: w.amountCents}}}).catch(() => {});
-      await tx.activity.create({data: {memberId: w.memberId, mode: "live", kind: "refund", title: `إعادة الرصيد بعد رفض السحب: ${data.note.trim()}`, amountCents: w.amountCents}}).catch(() => {});
+            await tx.activity.create({data: {memberId: w.memberId, mode: "live", kind: "refund", title: `إعادة الرصيد بعد رفض السحب: ${data.note.trim()}`, amountCents: w.amountCents}}).catch(() => {});
     }
     if (data.decision === "paid") {
-      await tx.activity.create({data: {memberId: w.memberId, mode: "live", kind: "payout", title: `تم تحويل مبلغ السحب بنجاح: ${money(w.amountCents)} USDT إلى محفظتك — معرّف العملية: ${hash.slice(0, 12)}...`, amountCents: -w.amountCents}}).catch(() => {});
+      await tx.activity.create({data: {memberId: w.memberId, mode: "live", kind: "payout", title: `تم تحويل مبلغ السحب بنجاح: ${money(w.amountCents)} USDT إلى محفظتك${hasHash ? ` — معرّف العملية: ${hash.slice(0, 12)}...` : ""}`, amountCents: -w.amountCents}}).catch(() => {});
     }
     await tx.audit.create({data: {actorId: req.member?.id || "admin", action: "withdrawal_review", targetId: id, detail: JSON.stringify(data)}}).catch(() => {});
     return tx.deposit ? tx.withdrawal.update({
@@ -212,7 +238,7 @@ router.post("/admin/withdrawals/:id/review", async (req, res) => {
         reviewerId: req.member?.id || "admin",
         reviewedAt: new Date(),
         reviewNote: data.note.trim(),
-        ...(data.decision === "paid" ? {txHash: hash} : {}),
+        ...(data.decision === "paid" && hasHash ? {txHash: hash} : {}),
       },
       include: {member: true}
     }) : w;

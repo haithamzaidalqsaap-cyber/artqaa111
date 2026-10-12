@@ -1,0 +1,94 @@
+import express, { Router, type IRouter } from "express";
+import { randomUUID } from "node:crypto";
+import * as V from "@workspace/api-zod";
+import { prisma } from "../lib/prisma";
+import { requireMember } from "../lib/auth";
+import { HttpError, input } from "../lib/http";
+import { lockMember } from "../lib/platform";
+import { MAX_RECEIPT_SIZE, storage } from "../lib/receipts";
+
+const router: IRouter = Router();
+
+const parseReceiptContent = express.raw({ type: ["image/*", "application/octet-stream", "*/*"], limit: MAX_RECEIPT_SIZE });
+
+router.post("/receipts/upload", requireMember, async (req, res) => {
+  const data = input(V.RequestReceiptUploadBody, req.body);
+  const ticket = await prisma.$transaction(async (tx: any) => {
+    await lockMember(tx, req.member!.id);
+    const count = await tx.receiptUpload.count({
+      where: { memberId: req.member!.id, createdAt: { gte: new Date(Date.now() - 86400_000) } }
+    });
+    if (count >= 50) throw new HttpError(429, "بلغت حد رفع الصور اليومي.");
+    const uploadId = randomUUID();
+    const upload = await tx.receiptUpload.create({
+      data: {
+        id: uploadId,
+        memberId: req.member!.id,
+        objectPath: `/objects/uploads/${uploadId}`,
+        contentType: data.contentType || "image/jpeg",
+        size: data.size || 1024
+      }
+    });
+    return { uploadId: upload.id, uploadUrl: `/api/receipts/upload/${upload.id}/content` };
+  }, { timeout: 35000 });
+  res.json(V.RequestReceiptUploadResponse.parse(ticket));
+});
+
+router.put("/receipts/upload/:id/content", requireMember, (req, res, next) => {
+  parseReceiptContent(req, res, (error?: Error) => {
+    if (error) {
+      next(new HttpError(413, "يجب ألا يتجاوز حجم صورة الإيصال 5 ميغابايت."));
+      return;
+    }
+    next();
+  });
+}, async (req, res): Promise<void> => {
+  const { id } = input(V.UploadReceiptBytesParams, req.params);
+  const upload = await prisma.receiptUpload.findUnique({ where: { id } });
+  if (!upload || upload.memberId !== req.member!.id) throw new HttpError(404, "طلب رفع الصورة غير موجود.");
+  if (upload.used) throw new HttpError(409, "تم استخدام صورة هذا الطلب بالفعل.");
+  if (Date.now() - upload.createdAt.getTime() > 120 * 60_000) throw new HttpError(400, "انتهت مهلة رفع الوصل، يرجى رفعه مجدداً.");
+
+  const content = req.body;
+  if (!Buffer.isBuffer(content) || content.length === 0) {
+    throw new HttpError(400, "ملف الصورة فارغ أو غير صالح.");
+  }
+  if (content.length > MAX_RECEIPT_SIZE) {
+    throw new HttpError(413, "حجم الصورة يتجاوز الحد الأقصى 5 ميغابايت.");
+  }
+
+  let contentType = (req.get("content-type") ?? upload.contentType ?? "image/jpeg").split(";", 1)[0]!.trim().toLowerCase();
+  if (contentType === "application/octet-stream" || !contentType.startsWith("image/")) {
+    if (content.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
+      contentType = "image/png";
+    } else if (content[0] === 255 && content[1] === 216 && content[2] === 255) {
+      contentType = "image/jpeg";
+    } else if (content.toString("ascii", 0, 4) === "RIFF" && content.toString("ascii", 8, 12) === "WEBP") {
+      contentType = "image/webp";
+    } else {
+      contentType = "image/jpeg";
+    }
+  }
+
+  await prisma.receiptUpload.update({
+    where: { id },
+    data: { size: content.length, contentType }
+  });
+
+  await storage.saveObjectEntityFile(upload.objectPath, content, contentType);
+  res.json(V.UploadReceiptBytesResponse.parse({ stored: true }));
+});
+
+router.get("/receipts/:id", requireMember, async (req, res) => {
+  const id = String(req.params.id);
+  const upload = await prisma.receiptUpload.findUnique({ where: { id } });
+  if (!upload?.used || !upload.finalPath || (req.member!.id !== upload.memberId && req.member!.role !== "admin")) throw new HttpError(404, "الصورة غير متاحة.");
+  const file = await storage.getObjectEntityFile(upload.finalPath);
+  res.setHeader("Content-Type", upload.contentType);
+  res.setHeader("Content-Disposition", "inline");
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("Content-Security-Policy", "default-src 'none'");
+  file.createReadStream().on("error", () => { if (!res.headersSent) res.sendStatus(404); else res.destroy(); }).pipe(res);
+});
+
+export default router;

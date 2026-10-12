@@ -1,22 +1,6 @@
-import { money } from "./platform";
+import { money, safeIso, safeIsoOrNull } from "./platform";
 
-export const safeIso = (v: any): string => {
-  if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
-  if (v) {
-    const d = new Date(v);
-    if (!isNaN(d.getTime())) return d.toISOString();
-  }
-  return new Date().toISOString();
-};
-
-export const safeIsoOrNull = (v: any): string | null => {
-  if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
-  if (v) {
-    const d = new Date(v);
-    if (!isNaN(d.getTime())) return d.toISOString();
-  }
-  return null;
-};
+export { safeIso, safeIsoOrNull };
 
 export const depositView = (d: any) => {
   const phoneDigits = String(d.member?.phone || d.memberPhone || "").replace(/[^0-9]/g, "");

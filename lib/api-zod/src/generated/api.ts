@@ -811,7 +811,8 @@ export const ListDepositsResponse = zod.array(ListDepositsResponseItem)
 
 
 export const CreateDepositBody = zod.object({
-  "planId": zod.string(),
+  "planId": zod.string().optional(),
+  "amount": zod.number().optional(),
   "channel": zod.enum(['binance', 'okx']),
   "acceptedTerms": zod.literal(true)
 })

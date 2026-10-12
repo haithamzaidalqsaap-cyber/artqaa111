@@ -340,7 +340,8 @@ export const DepositInputChannel = {
 } as const;
 
 export interface DepositInput {
-  planId: string;
+  planId?: string;
+  amount?: number;
   channel: DepositInputChannel;
   acceptedTerms: true;
 }

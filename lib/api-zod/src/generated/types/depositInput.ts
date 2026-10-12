@@ -7,7 +7,8 @@
 import type { DepositInputChannel } from './depositInputChannel';
 
 export interface DepositInput {
-  planId: string;
+  planId?: string;
+  amount?: number;
   channel: DepositInputChannel;
   acceptedTerms: true;
 }
